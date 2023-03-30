@@ -322,6 +322,34 @@ RUN wget \
         --directory=/android/arm64-v8a && \
     rm /tmp/libffi-*.tar.gz
 
+# libzip
+ARG LIBZIP_VERSION=1.8.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/libzip-*.tar.gz
+RUN wget \
+        --output-document=/tmp/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz \
+        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz && \
+    tar --extract \
+        --file=/tmp/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz \
+        --directory=/android/x86_64 && \
+    rm /tmp/libzip-*.tar.gz
+RUN wget \
+        --output-document=/tmp/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz \
+        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz && \
+    tar --extract \
+        --file=/tmp/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz \
+        --directory=/android/arm64-v8a && \
+    rm /tmp/libzip-*.tar.gz
+
 # nlohmann-json
 ARG NLOHMANN_JSON_VERSION=3.10.5-1
 RUN case ${TARGETPLATFORM} in \
