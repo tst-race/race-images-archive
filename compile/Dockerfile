@@ -97,6 +97,7 @@ RUN apt-get update -y && \
         clang-format-10=1:10.* \
         clang-tidy-10=1:10.* \
         lcov=1.14* \
+        pkg-config=0.29.1* \
         valgrind=1:3.15.0*
 
 ###
