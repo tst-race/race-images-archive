@@ -350,7 +350,7 @@ RUN case ${TARGETPLATFORM} in \
 ARG OPENSSL_VERSION=1.1.1l-1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        openssl=1.1.1*
+        libssl-dev=1.1.1*
 RUN wget \
         --output-document=/tmp/openssl-${OPENSSL_VERSION}-android-x86_64.tar.gz \
         https://github.com/tst-race/ext-openssl/releases/download/${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}-android-x86_64.tar.gz && \
