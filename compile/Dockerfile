@@ -39,6 +39,8 @@ RUN case ${TARGETPLATFORM} in \
         --file=/tmp/go${GO_VERSION}.linux-${LINUX_ARCH}.tar.gz \
         --directory=/usr/local && \
     rm /tmp/go*.tar.gz
+ENV GOROOT=/usr/local/go \
+    PATH=/usr/local/go/bin:$PATH
 
 # Java
 RUN apt-get -y update && \
