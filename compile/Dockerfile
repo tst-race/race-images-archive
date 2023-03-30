@@ -495,7 +495,7 @@ RUN wget \
     rm /tmp/sodium-*.tar.gz
 
 # SWIG (Linux-only)
-ARG SWIG_VERSION=4.0.1-1
+ARG SWIG_VERSION=4.0.1-2
 RUN case ${TARGETPLATFORM} in \
         "linux/amd64") LINUX_ARCH=x86_64    ;; \
         "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
