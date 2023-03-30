@@ -193,7 +193,7 @@ RUN wget \
 ARG CURL_VERSION=7.58.0-1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        curl=7.68.0*
+        libcurl4-gnutls-dev=7.68.0*
 RUN wget \
         --output-document=/tmp/curl-${CURL_VERSION}-android-x86_64.tar.gz \
         https://github.com/tst-race/ext-curl/releases/download/${CURL_VERSION}/curl-${CURL_VERSION}-android-x86_64.tar.gz && \
