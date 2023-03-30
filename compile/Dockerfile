@@ -101,6 +101,24 @@ RUN apt-get update -y && \
 # Install custom-built library dependencies
 ###
 
+#
+# To use a locally-built version of a library:
+#
+# 1. Copy the resulting `.tar.gz` file into this directory
+# 2. Comment out the `RUN` statement that fetches the library
+#    from github
+# 3. Add the following `ADD` statement in its place (using the
+#    appropriate values for `name`, `version`, and `arch`):
+#
+#    For Linux:
+#
+#        ADD {name}-{version}-linux-{arch}.tar.gz /usr/local/
+#
+#    For Android:
+#
+#        ADD {name}-{version}-android-{arch}.tar.gz /android/{arch}/
+#
+
 # Boost
 ARG BOOST_VERSION=1.73.0-1
 RUN case ${TARGETPLATFORM} in \
