@@ -295,7 +295,7 @@ RUN wget \
     rm /tmp/jsoncpp-*.tar.gz
 
 # libarchive
-ARG LIBARCHIVE_VERSION=3.3.2-1
+ARG LIBARCHIVE_VERSION=3.3.2-2
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
         libarchive-dev=3.4.0*
