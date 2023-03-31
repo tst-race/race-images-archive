@@ -1,0 +1,17 @@
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - 'main'
+
+permissions:
+  packages: write
+
+jobs:
+  compile-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      image-name: ${{ github.repository }}/race-compile
