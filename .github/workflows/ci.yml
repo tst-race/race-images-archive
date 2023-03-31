@@ -14,4 +14,5 @@ jobs:
   compile-image:
     uses: ./.github/workflows/build-image.yml
     with:
+      context: compile
       image-name: ${{ github.repository }}/race-compile
