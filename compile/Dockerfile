@@ -28,7 +28,7 @@ ARG TARGETPLATFORM
 
 # Android
 RUN sdkmanager --install "platforms;android-29" && \
-    sdkmanager --install "build-tools;30.0.2" && \
+    sdkmanager --install "build-tools;31.0.0" && \
     ln -s /opt/android/build-tools/30.0.2 /opt/android/build-tools/default
 ENV ANDROID_HOME=/opt/android
 

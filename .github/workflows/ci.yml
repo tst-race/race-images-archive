@@ -16,4 +16,3 @@ jobs:
     with:
       context: compile
       image-name: ${{ github.repository }}/race-compile
-      platforms: linux/amd64
