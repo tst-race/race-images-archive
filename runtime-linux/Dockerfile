@@ -934,3 +934,18 @@ RUN ln -s /usr/local/lib/race/ta3/race-daemon/bin/race-daemon-linux /usr/local/b
     ln -s /usr/local/lib/race/ta3/race/bin/racetestapp /usr/local/bin/racetestapp && \
     ln -s /usr/local/lib/race/ta3/race/lib/python /usr/local/lib/race/python && \
     ln -s /usr/local/lib/race/ta3/race/lib/java/racesdk-java-shims-1.jar /usr/local/lib/race/java/racesdk-java-shims-1.jar
+
+HEALTHCHECK --interval=30s --timeout=10s \
+    CMD systemctl is-active --quiet race-daemon
+
+# Enable linux race-daemon
+RUN systemctl enable jaeger-collector jaeger-agent race-daemon
+
+# Create all necessary plugin directories
+RUN mkdir -p /usr/local/lib/race/artifact-manager && \
+    mkdir -p /usr/local/lib/race/ta1 && \
+    mkdir -p /usr/local/lib/race/ta2
+
+# Run Command
+STOPSIGNAL SIGRTMIN+3
+CMD [ "/sbin/init" ]
