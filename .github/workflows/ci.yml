@@ -16,3 +16,9 @@ jobs:
     with:
       context: compile
       image-name: ${{ github.repository }}/race-compile
+
+  runtime-linux-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: runtime-linux
+      image-name: ${{ github.repository }}/race-runtime-linux
