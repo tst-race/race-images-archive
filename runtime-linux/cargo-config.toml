@@ -1,0 +1,3 @@
+[target.x86_64-linux-android]
+ar = "/opt/android/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android-ar"
+linker = "/opt/android/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android29-clang"
