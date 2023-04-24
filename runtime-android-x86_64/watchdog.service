@@ -1,0 +1,15 @@
+[Unit]
+Description=watchdog
+After=network.target
+[Service]
+Environment="USER=root"
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/local/bin/watchdog.sh
+StandardOutput=file:/log/watchdog-stdout.log
+StandardError=file:/log/watchdog-stderr.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Race App Install
+EnvironmentFile=/code/race.env
+After=network.target race-emulator.service race-env.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=no
+User=root
+ExecStart=/code/race_wrapper.sh /code/run-race-install.sh
+StandardOutput=file:/log/install-stdout.log
+StandardError=file:/log/install-stderr.log
+
+[Install]
+WantedBy=multi-user.target
