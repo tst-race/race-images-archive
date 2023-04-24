@@ -14,46 +14,45 @@
 # limitations under the License.
 # 
 
-FROM --platform=$TARGETPLATFORM nvidia/cuda:11.7.0-devel-ubuntu20.04 as base
-LABEL maintainer="Two Six Labs <race@twosixlabs.com>"
+FROM --platform=$TARGETPLATFORM nvidia/cuda:11.7.1-devel-ubuntu20.04 as base
 
 ARG TARGETARCH
-RUN echo "building for architecture $TARGETARCH"
+ARG TARGETPLATFORM
 
 # install apt key
-FROM base as amd64-apt-key
-ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-${TARGETARCH}/jre/lib/${TARGETARCH}/server/"
-RUN apt-key del 7fa2af80 && \
-    apt-key adv --fetch-keys \
-        https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+# FROM base as amd64-apt-key
+# ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-${TARGETARCH}/jre/lib/${TARGETARCH}/server/"
+# RUN apt-key del 7fa2af80 && \
+#     apt-key adv --fetch-keys \
+#         https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
 
-# in case of "E: The repository 'http://ports.ubuntu.com/ubuntu-ports focal-security InRelease' is not signed."
-# known signing issue on arm64 arch: https://askubuntu.com/questions/1263284/apt-update-throws-signature-error-in-ubuntu-20-04-container-on-arm
-FROM base as arm64-apt-key
-ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-arm64/jre/lib/aarch64/server/"
-RUN apt-key del A4B469963BF863CC && \
-    apt-key adv --fetch-keys \
-        https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/sbsa/3bf863cc.pub
+# # in case of "E: The repository 'http://ports.ubuntu.com/ubuntu-ports focal-security InRelease' is not signed."
+# # known signing issue on arm64 arch: https://askubuntu.com/questions/1263284/apt-update-throws-signature-error-in-ubuntu-20-04-container-on-arm
+# FROM base as arm64-apt-key
+# ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-arm64/jre/lib/aarch64/server/"
+# RUN apt-key del A4B469963BF863CC && \
+#     apt-key adv --fetch-keys \
+#         https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/sbsa/3bf863cc.pub
     
-#declare common installs (executed towards the end)
-FROM ${TARGETARCH}-apt-key as common-installs
+# #declare common installs (executed towards the end)
+# FROM ${TARGETARCH}-apt-key as common-installs
 
 ###
 # Setup environment
 ###
-ENV ANDROID_HOME=/opt/android
-ENV APP_ROOT=/code/
-ENV CONFIG_ROOT=/config/
-ENV DATA_ROOT=/data/
-ENV DEV_DIR=/code/dev/
-ENV ENVIRONMENT=development
-ENV LOG_ROOT=/log/
-ENV RACE_ETC_PATH=/etc/race
-ENV RACE_NODE_TYPE=
-ENV RACE_PERSONA=
-ENV TMP_ROOT=/tmp/
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ANDROID_AAR_DEPS=/android/aar/
+ENV ANDROID_HOME=/opt/android \
+    APP_ROOT=/code/ \
+    CONFIG_ROOT=/config/ \
+    DATA_ROOT=/data/ \
+    DEV_DIR=/code/dev/ \
+    ENVIRONMENT=development \
+    LOG_ROOT=/log/ \
+    RACE_ETC_PATH=/etc/race \
+    RACE_NODE_TYPE= \
+    RACE_PERSONA= \
+    TMP_ROOT=/tmp/ \
+    DEBIAN_FRONTEND=noninteractive \
+    ANDROID_AAR_DEPS=/android/aar/
 
 # Make Necessary Directories
 RUN mkdir -p ${APP_ROOT} ${TMP_ROOT} ${CONFIG_ROOT} \
@@ -110,6 +109,10 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
         zip=3.0* && \
     update-ca-certificates -f;
 
+# Add CMake repository for cmake 3.23
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
+    add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+
 # Install build tools/libraries
 RUN apt-get -y update && \
     apt-get install -y --no-install-recommends \
@@ -122,6 +125,8 @@ RUN apt-get -y update && \
         build-essential=12.8* \
         byacc=20140715* \
         clang-15=1:15.0* \
+        cmake=3.23.* \
+        cmake-data=3.23.* \
         libclang-rt-15-dev=1:15.0* \
         dpkg-dev=1.19.7* \
         g++-7=7.5.0-6ubuntu2 \
@@ -154,27 +159,6 @@ RUN apt-get -y update && \
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 1 && \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 1
 
-# Set default artifactory args
-ARG ARTIFACTORY_URL=https://jfrog.race.twosixlabs.com/artifactory/
-
-# Install JFrog CLI
-RUN cd /usr/local/bin && curl -fL https://getcli.jfrog.io | sh -s 1.45.2
-# RUN file $(which jfrog)
-
-# CMake
-WORKDIR ${TMP_ROOT}
-ARG CMAKE_VERSION=3.23.1
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/cmake/3.23.1/cmake-${CMAKE_VERSION}-linux-* \
-        /cmake.tar.gz \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    tar xf cmake/3.23.1/cmake.tar.gz -C /usr/local --strip-components=1
-RUN cmake --version
-RUN rm -fr cmake
-
 ###
 # Configure Language/Env
 ###
@@ -185,18 +169,18 @@ ENV CXX clang++
 
 # Configure Go Environment
 WORKDIR ${TMP_ROOT}
-ARG GO_VERSION=go1.14.15
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/go/${GO_VERSION}.linux-* \
-        ${TMP_ROOT}/go.tar.gz \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    tar -xf go.tar.gz &&\
-    mv go /usr/local && \
-    rm ${TMP_ROOT}/go.tar.gz
+ARG GO_VERSION=1.14.15
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=amd64 ;; \
+        "linux/arm64") LINUX_ARCH=arm64 ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/go${GO_VERSION}.linux-${LINUX_ARCH}.tar.gz \
+        https://go.dev/dl/go${GO_VERSION}.linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/go${GO_VERSION}.linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/go*.tar.gz
 ENV GOROOT=/usr/local/go
 ENV GOPATH=$HOME/Projects/Proj1
 ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
@@ -304,19 +288,19 @@ RUN mvn dependency:copy-dependencies -DoutputDirectory=/usr/local/lib/race/java/
 # Install Jaeger Agent and Collector binaries
 WORKDIR ${TMP_ROOT}
 ARG JAEGER_VERSION=1.18.1
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/jaeger-agent-collector/1.18.1/jaeger-1.18.1-linux-* \
-        /jaeger.tar.gz \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    tar -xzf jaeger.tar.gz && \
-    cd jaeger-${JAEGER_VERSION}-linux-${TARGETARCH} &&\
-    cp jaeger-agent /usr/local/bin &&\
-    cp jaeger-collector /usr/local/bin &&\
-    rm -fr jaeger-agent-collector
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=amd64 ;; \
+        "linux/arm64") LINUX_ARCH=arm64 ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/jaeger-${JAEGER_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/jaegertracing/jaeger/releases/download/v${JAEGER_VERSION}/jaeger-${JAEGER_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/jaeger-${JAEGER_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/tmp && \
+    cp /tmp/jaeger-${JAEGER_VERSION}-linux-${LINUX_ARCH}/jaeger-agent /usr/local/bin && \
+    cp /tmp/jaeger-${JAEGER_VERSION}-linux-${LINUX_ARCH}/jaeger-collector /usr/local/bin && \
+    rm -rf /tmp/jaeger-*
 
 # Install Android CLI tools
 WORKDIR ${ANDROID_HOME}
@@ -430,27 +414,29 @@ RUN apt-get -y update && \
         zstd=1.4.4*
 
 # Installing Icecast (and sha256sum) for Galois
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/icecast2/*/sha256sum-icecast2-* \
-        ${TMP_ROOT}/icecast2-sha256sum \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token)
+# TODO
+# RUN --mount=type=secret,id=jfrog_token CI=true \
+#     jfrog rt download \
+#         twosix-generic-prod-local/icecast2/*/sha256sum-icecast2-* \
+#         ${TMP_ROOT}/icecast2-sha256sum \
+#         --flat \
+#         --url=${ARTIFACTORY_URL} \
+#         --props ARCH=${TARGETARCH} \
+#         --access-token=$(cat /run/secrets/jfrog_token)
 
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/icecast2/*/icecast2* \
-        ${TMP_ROOT}/icecast2.deb \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    echo "$(cat ${TMP_ROOT}/icecast2-sha256sum) ${TMP_ROOT}/icecast2.deb" | sha256sum --check --status && \
-    apt-get install -yy ${TMP_ROOT}/icecast2.deb && \
-    rm ${TMP_ROOT}/icecast2.deb && \
-    rm ${TMP_ROOT}/icecast2-sha256sum
+# TODO
+# RUN --mount=type=secret,id=jfrog_token CI=true \
+#     jfrog rt download \
+#         twosix-generic-prod-local/icecast2/*/icecast2* \
+#         ${TMP_ROOT}/icecast2.deb \
+#         --flat \
+#         --url=${ARTIFACTORY_URL} \
+#         --props ARCH=${TARGETARCH} \
+#         --access-token=$(cat /run/secrets/jfrog_token) && \
+#     echo "$(cat ${TMP_ROOT}/icecast2-sha256sum) ${TMP_ROOT}/icecast2.deb" | sha256sum --check --status && \
+#     apt-get install -yy ${TMP_ROOT}/icecast2.deb && \
+#     rm ${TMP_ROOT}/icecast2.deb && \
+#     rm ${TMP_ROOT}/icecast2-sha256sum
 
 # Install Galois TA2 Python Dependencies
 RUN python3.7 -m pip install --no-cache-dir \
@@ -476,16 +462,18 @@ RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager firefox --linkpath /usr/local/bin
 
 # Install Galois Plik dependency
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/plik/1.3.1/plik-1.3.1-linux* \
-        /tmp/plik-1.3.1-linux.tar.gz \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --props ARCH=${TARGETARCH} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    tar -xzvf /tmp/plik-1.3.1-linux.tar.gz --directory /opt && \
-    rm -rf /tmp/plik-1.3.1-linux.tar.gz 
+ARG PLIK_VERSION=1.3.1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=amd64 ;; \
+        "linux/arm64") LINUX_ARCH=arm64 ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/root-gg/plik/releases/download/${PLIK_VERSION}/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/opt && \
+    rm /tmp/plik-*.tar.gz
 
 # When updating the major version of chrome, will also need to update the chromedriver
 # to an appropriate version. See https://chromedriver.chromium.org/downloads/version-selection
@@ -531,36 +519,39 @@ RUN python3.7 -m pip install --no-cache-dir \
     websockets==6.0
 
 # Install STR Android dependencies (Tensorflow lite)
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/tensorflow-lite/0.1.0/*.aar \
-        ${ANDROID_AAR_DEPS} \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --access-token=$(cat /run/secrets/jfrog_token)
+# TODO
+# RUN --mount=type=secret,id=jfrog_token CI=true \
+#     jfrog rt download \
+#         twosix-generic-prod-local/tensorflow-lite/0.1.0/*.aar \
+#         ${ANDROID_AAR_DEPS} \
+#         --flat \
+#         --url=${ARTIFACTORY_URL} \
+#         --access-token=$(cat /run/secrets/jfrog_token)
 
 # Install STR Android dependencies (JavaNpy)
 # TODO rename aar dependencies dir because it can be used for jars as well
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/JavaNpy/1.0/JavaNpy.jar \
-        ${ANDROID_AAR_DEPS} \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --access-token=$(cat /run/secrets/jfrog_token)
+# TODO
+# RUN --mount=type=secret,id=jfrog_token CI=true \
+#     jfrog rt download \
+#         twosix-generic-prod-local/JavaNpy/1.0/JavaNpy.jar \
+#         ${ANDROID_AAR_DEPS} \
+#         --flat \
+#         --url=${ARTIFACTORY_URL} \
+#         --access-token=$(cat /run/secrets/jfrog_token)
 
 
 # Install SRI TA2 Minecraft
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/minecraft/sri-ta2-1/MinecraftProxy.tar \
-        /tmp/MinecraftProxy.tar \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    tar -xvkf /tmp/MinecraftProxy.tar -C /usr/local/lib && \
-    /usr/local/lib/MinecraftProxy/client/gradlew --no-daemon && \
-    rm /tmp/MinecraftProxy.tar
+# TODO
+# RUN --mount=type=secret,id=jfrog_token CI=true \
+#     jfrog rt download \
+#         twosix-generic-prod-local/minecraft/sri-ta2-1/MinecraftProxy.tar \
+#         /tmp/MinecraftProxy.tar \
+#         --flat \
+#         --url=${ARTIFACTORY_URL} \
+#         --access-token=$(cat /run/secrets/jfrog_token) && \
+#     tar -xvkf /tmp/MinecraftProxy.tar -C /usr/local/lib && \
+#     /usr/local/lib/MinecraftProxy/client/gradlew --no-daemon && \
+#     rm /tmp/MinecraftProxy.tar
 
 # Install Georgetown Linux Dependencies
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
@@ -593,7 +584,7 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 #   install conda to install numba on arm64 https://repo.anaconda.com/miniconda/
 
 # amd64-specific binaries
-FROM common-installs as amd64-installs
+FROM base as amd64-installs
 RUN python3.7 -m pip install --no-cache-dir \
     torch~=1.7.0 \
     torchvision~=0.8.1 
@@ -606,21 +597,19 @@ RUN wget http://ftp.mozilla.org/pub/firefox/releases/103.0/linux-$(uname -m)/en-
 
 RUN python3.7 -m pip install --no-cache-dir tensorflow==2.5.0
 
-RUN --mount=type=secret,id=jfrog_token CI=true \
-    jfrog rt download \
-        twosix-generic-prod-local/google-chrome-stable/89.0.4389.72-1/google-chrome-stable_89.0.4389.72-1_amd64.deb \
-        /tmp/google-chrome-stable.deb \
-        --flat \
-        --url=${ARTIFACTORY_URL} \
-        --access-token=$(cat /run/secrets/jfrog_token) && \
-    apt-get install -yy /tmp/google-chrome-stable.deb && \
-    rm /tmp/google-chrome-stable.deb
+ARG CHROME_VERSION=89.0.4389.72-1
+RUN \
+    wget \
+        --output-document=/tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+        http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb && \
+    apt-get install -yy /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb && \
+    rm /tmp/google-chrome-stable_*.deb
 
 RUN ldconfig /usr/local/cuda-11.7/targets/x86_64-linux/lib/stubs && ldconfig 
 RUN python3.7 -m pip install --no-cache-dir numba==0.51.2
 
 # arm64-specific binaries
-FROM common-installs as arm64-installs
+FROM base as arm64-installs
 # TODO these versions of torch* may not work for SRI
 # consider build the older versions from source
 RUN python3.7 -m pip install --no-cache-dir \
