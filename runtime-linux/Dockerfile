@@ -642,3 +642,295 @@ ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda-11.7/lib64
 # Set last working dir back to app root
 WORKDIR ${APP_ROOT}
 
+###
+# Install custom-built library dependencies
+###
+
+#
+# To use a locally-built version of a library:
+#
+# 1. Copy the resulting `.tar.gz` file into this directory
+# 2. Comment out the `RUN` statement that fetches the library
+#    from github
+# 3. Add the following `ADD` statement in its place (using the
+#    appropriate values for `name`, `version`, and `arch`):
+#
+#    ADD {name}-{version}-linux-{arch}.tar.gz /usr/local/
+#
+
+# Boost
+ARG BOOST_VERSION=1.73.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-boost/releases/download/${BOOST_VERSION}/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/boost-*.tar.gz
+
+# cpprest
+ARG CPPREST_VERSION=2.10.18-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-cpprest/releases/download/${CPPREST_VERSION}/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/cpprest-*.tar.gz
+
+# ffmpeg
+ARG FFMPEG_VERSION=4.2.2-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/ffmpeg-${FFMPEG_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-ffmpeg/releases/download/${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/ffmpeg-${FFMPEG_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/ffmpeg-*.tar.gz
+
+# GDB
+ARG GDB_VERSION=12.1-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/gdb-${GDB_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-gdb/releases/download/${GDB_VERSION}/gdb-${GDB_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/gdb-${GDB_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/gdb-*.tar.gz
+
+# GoogleTest
+ARG GOOGLETEST_VERSION=1.12.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-googletest/releases/download/${GOOGLETEST_VERSION}/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/googletest-*.tar.gz
+
+# Jaeger Client
+ARG JAEGER_CLIENT_VERSION=0.6.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-jaeger-client-cpp/releases/download/${JAEGER_CLIENT_VERSION}/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/jaeger-client-cpp-*.tar.gz
+
+# libzip
+ARG LIBZIP_VERSION=1.8.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/libzip-*.tar.gz
+
+# nlohmann-json
+ARG NGINX_VERSION=1.14.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/nginx-${NGINX_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-nginx/releases/download/${NGINX_VERSION}/nginx-${NGINX_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/nginx-${NGINX_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/nginx-*.tar.gz
+
+# nlohmann-json
+ARG NLOHMANN_JSON_VERSION=3.10.5-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-nlohmann-json/releases/download/${NLOHMANN_JSON_VERSION}/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/nlohmann-json-*.tar.gz
+
+# NTL
+ARG NTL_VERSION=11.4.4-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-ntl/releases/download/${NTL_VERSION}/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/ntl-*.tar.gz
+
+# OpenTracing C++ API
+ARG OPENTRACING_CPP_VERSION=1.6.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-opentracing-cpp/releases/download/${OPENTRACING_CPP_VERSION}/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/opentracing-cpp-*.tar.gz
+
+# PBC
+ARG PBC_VERSION=0.5.14-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-pbc/releases/download/${PBC_VERSION}/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/pbc-*.tar.gz
+
+# Apache Thrift
+ARG THRIFT_VERSION=0.12.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-thrift/releases/download/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/thrift-*.tar.gz
+
+# yaml-cpp
+ARG YAML_CPP_VERSION=0.6.2-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-yaml-cpp/releases/download/${YAML_CPP_VERSION}/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/yaml-cpp-*.tar.gz
+
+
+###
+# Install Linux Packages
+###
+
+
+# Install build tools/libraries after
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+    bridge-utils=1.6-* \
+    openbox=3.6.1-* \
+    ruby-dev=1:2.7+* \
+    tightvncserver=1.3.10-* \
+    xfonts-base=1:1.0.* \
+    locales=2.31-* && \
+    apt-get clean
+
+# TODO: not entirely sure these are needed. Adding for now since libvirt-bin is no longer avaiable when upgrading from 18.04 to 20.04. Try to remove it later and see if it's all good.
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+    libvirt-daemon-system libvirt-clients
+
+###
+# Add Files To Docker Images and Configure Services
+###
+
+
+# # Configure sshd
+# RUN mkdir -p /etc/ssh/ && \
+#     mkdir -p /root/.ssh/
+# COPY sshd_config /etc/ssh/sshd_config
+# COPY bastion_key.pub /root/.ssh/authorized_keys
+# RUN chmod 0700 /root/.ssh && \
+#     chmod 0400 /root/.ssh/authorized_keys
+
+# # Install Root Cert (https://www.techrepublic.com/article/how-to-install-ca-certificates-in-ubuntu-server/)
+# RUN mkdir -p /usr/local/share/ca-certificates
+# COPY ca.cert.pem.crt /usr/local/share/ca-certificates/ca.cert.pem.crt
+# RUN chmod 0644 /usr/local/share/ca-certificates/ca.cert.pem.crt && \
+#     update-ca-certificates
+
+
+###
+# Configure systemd
+###
+
+ENV container docker
+ENV SYSTEMD_PROC_CMDLINE "systemd.unified_cgroup_hierarchy=1 cgroup_no_v1=all systemd.legacy_systemd_cgroup_controller=0"
+COPY race_wrapper.sh \
+    print_env_vars.sh \
+    uninstall-race.sh \
+    /code/
+COPY race-env.service \
+    jaeger-collector.service \
+    jaeger-agent.service \
+    uninstall-race.service \
+    race-daemon.service \
+    /etc/systemd/system/
+RUN systemctl disable $(systemctl list-unit-files --state=enabled | head -n -1 | tail -n +2 | awk '{print $1}')
+RUN apt install cron
+RUN systemctl enable cron binfmt-support uninstall-race
+RUN mkdir /race-service-logs
+
+
+# Copy nginx configuration and systemd service files.
+COPY nginx.conf.selfsigned /usr/local/nginx/conf/nginx.conf
+COPY nginx.service /lib/systemd/system/nginx.service
+
+# Setup certificates for nginx.
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=raceserver" -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt && \
+    openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048 > /dev/null
+
+
+###
+# Creating Symlinks for node-daemon, racesecli, racetestapp, python, and racesdk java shims.
+###
+
+RUN ln -s /usr/local/lib/race/ta3/race-daemon/bin/race-daemon-linux /usr/local/bin/race-daemon-linux && \
+    ln -s /usr/local/lib/race/ta3/race/bin/racesecli /usr/local/bin/racesecli && \
+    ln -s /usr/local/lib/race/ta3/race/bin/racetestapp /usr/local/bin/racetestapp && \
+    ln -s /usr/local/lib/race/ta3/race/lib/python /usr/local/lib/race/python && \
+    ln -s /usr/local/lib/race/ta3/race/lib/java/racesdk-java-shims-1.jar /usr/local/lib/race/java/racesdk-java-shims-1.jar
