@@ -29,3 +29,4 @@ jobs:
     with:
       context: runtime-linux
       image-name: ${{ github.repository }}/race-runtime-linux
+      platforms: linux/amd64
