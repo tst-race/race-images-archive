@@ -17,6 +17,13 @@ jobs:
       context: compile
       image-name: ${{ github.repository }}/race-compile
 
+  runtime-android-x86_64-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: runtime-android-x86_64
+      image-name: ${{ github.repository }}/race-runtime-android-x86_64
+      platforms: linux/amd64
+
   runtime-linux-image:
     uses: ./.github/workflows/build-image.yml
     with:
