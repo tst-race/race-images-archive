@@ -18,8 +18,8 @@ FROM ubuntu:20.04
 
 # Install base utilities (to handle installs)
 RUN apt-get -y update && \
-    apt-get install -y \
-        openjdk-8-jdk \
+    apt-get install -y --no-install-recommends \
+        openjdk-8-jre-headless \
         wget \
         unzip
 
@@ -48,12 +48,12 @@ RUN /opt/android/cmdline-tools/tools/bin/avdmanager create avd \
 COPY config.ini /root/.android/avd/android_29.avd/config.ini
 
 # Install packages
-RUN apt-get -y update && apt-get install -y --no-install-recommends \
-    expect=5.45.4-* \
-    systemd \
-    tightvncserver=1.3.10-* \
-    xfonts-base=1:1.0.* \
-    locales=2.31-* && \
+RUN apt-get -y update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        expect=5.45.4-* \
+        systemd \
+        tightvncserver=1.3.10-* \
+        xfonts-base=1:1.0.* && \
     apt-get clean
 
 # Setup VNC
