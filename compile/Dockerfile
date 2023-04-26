@@ -29,7 +29,15 @@ ARG TARGETPLATFORM
 # Android
 RUN sdkmanager --install "platforms;android-29" && \
     sdkmanager --install "build-tools;31.0.0" && \
-    ln -s /opt/android/build-tools/31.0.0 /opt/android/build-tools/default
+    ln -s /opt/android/build-tools/31.0.0 /opt/android/build-tools/default && \
+    # Hack because the version of the Android Gradle Plugin we use (4.0.1)
+    # thinks build-tools is corrupt without these files. It doesn't use them,
+    # they just have to exist. This is fixed in version 7.X of the plugin,
+    # but that would require gradle version 7.5+ which then requires JDK 11.
+    # Since we don't want to include JDK 11 in the image, we create these
+    # empty files to satisfy the Android Gradle Plugin.
+    touch /opt/android/build-tools/31.0.0/dx && \
+    touch /opt/android/build-tools/31.0.0/lib/dx.jar
 ENV ANDROID_HOME=/opt/android
 
 # Go
