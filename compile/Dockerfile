@@ -463,3 +463,9 @@ RUN for OS in linux android; do \
         done; \
     done && \
     rm /tmp/yaml-cpp-*.tar.gz
+
+# Ensure these environment variables exist, even if they are empty
+ENV RACE_NODE_TYPE= \
+    RACE_PERSONA= \
+    PYTHONPATH="${PYTHONPATH}" \
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/linux/x86_64/lib:/linux/arm64-v8a/lib"
