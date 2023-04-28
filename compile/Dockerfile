@@ -16,9 +16,6 @@
 
 FROM ghcr.io/tst-race/ext-builder:v1
 
-RUN mkdir -p /android/x86_64 && \
-    mkdir -p /android/arm64-v8a
-
 ###
 # Compilers/tools
 ###
@@ -62,6 +59,11 @@ RUN apt-get -y update && \
         openjdk-8-jdk=8* \
         maven=3.6.3* \
         ca-certificates-java=20190405* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                openjdk-8-jdk:arm64=8* ;; \
+    esac && \
     apt-get clean && \
     update-ca-certificates -f && \
     update-java-alternatives --jre-headless --jre --set java-1.8.0-openjdk-${TARGETARCH}
@@ -79,6 +81,10 @@ RUN wget \
     rustup component add rustfmt && \
     rustup target add x86_64-linux-android && \
     rustup target add aarch64-linux-android && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            rustup target add aarch64-unknown-linux-gnu ;; \
+    esac && \
     rm /tmp/rustup.sh
 
 # Python
@@ -94,6 +100,11 @@ RUN apt-get update -y && \
         python3-wheel=0.34.2-* \
         python3.7-tk=${PYTHON_VERSION}-* \
         python3.7-distutils=${PYTHON_VERSION}-* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                python3.7-dev:arm64=${PYTHON_VERSION}-* ;; \
+    esac && \
     wget https://bootstrap.pypa.io/get-pip.py && \
     python3.7 get-pip.py && \
     python3.7 -m pip install --user --no-cache-dir --upgrade --force-reinstall pip && \
@@ -138,32 +149,25 @@ RUN apt-get update -y && \
 #        ADD {name}-{version}-android-{arch}.tar.gz /android/{arch}/
 #
 
+# Create library download locations.
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            mkdir -p /${OS}/${ARCH}; \
+        done; \
+    done
+
 # Boost
 ARG BOOST_VERSION=1.73.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-boost/releases/download/${BOOST_VERSION}/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/boost-${BOOST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/boost-*.tar.gz
-RUN wget \
-        --output-document=/tmp/boost-${BOOST_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-boost/releases/download/${BOOST_VERSION}/boost-${BOOST_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/boost-${BOOST_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/boost-*.tar.gz
-RUN wget \
-        --output-document=/tmp/boost-${BOOST_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-boost/releases/download/${BOOST_VERSION}/boost-${BOOST_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/boost-${BOOST_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/boost-${BOOST_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-boost/releases/download/${BOOST_VERSION}/boost-${BOOST_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/boost-${BOOST_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/boost-*.tar.gz
 
 # Cppcheck (Linux-only)
@@ -182,50 +186,36 @@ RUN case ${TARGETPLATFORM} in \
 
 # cpprest
 ARG CPPREST_VERSION=2.10.18-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-cpprest/releases/download/${CPPREST_VERSION}/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/cpprest-${CPPREST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/cpprest-*.tar.gz
-RUN wget \
-        --output-document=/tmp/cpprest-${CPPREST_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-cpprest/releases/download/${CPPREST_VERSION}/cpprest-${CPPREST_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/cpprest-${CPPREST_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/cpprest-*.tar.gz
-RUN wget \
-        --output-document=/tmp/cpprest-${CPPREST_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-cpprest/releases/download/${CPPREST_VERSION}/cpprest-${CPPREST_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/cpprest-${CPPREST_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/cpprest-${CPPREST_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-cpprest/releases/download/${CPPREST_VERSION}/cpprest-${CPPREST_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/cpprest-${CPPREST_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/cpprest-*.tar.gz
 
 # curl
 ARG CURL_VERSION=7.58.0-1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        libcurl4-gnutls-dev=7.68.0*
-RUN wget \
-        --output-document=/tmp/curl-${CURL_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-curl/releases/download/${CURL_VERSION}/curl-${CURL_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/curl-${CURL_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/curl-*.tar.gz
-RUN wget \
-        --output-document=/tmp/curl-${CURL_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-curl/releases/download/${CURL_VERSION}/curl-${CURL_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/curl-${CURL_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+        libcurl4-gnutls-dev=7.68.0* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                libcurl4-gnutls-dev:arm64=7.68.0* ;; \
+    esac
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/curl-${CURL_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-curl/releases/download/${CURL_VERSION}/curl-${CURL_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/curl-${CURL_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/curl-*.tar.gz
 
 # GDB (Linux-only)
@@ -244,270 +234,192 @@ RUN case ${TARGETPLATFORM} in \
 
 # GoogleTest (Linux-only)
 ARG GOOGLETEST_VERSION=1.12.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-googletest/releases/download/${GOOGLETEST_VERSION}/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-googletest/releases/download/${GOOGLETEST_VERSION}/googletest-${GOOGLETEST_VERSION}-linux-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/googletest-${GOOGLETEST_VERSION}-linux-${ARCH}.tar.gz \
+            --directory=/linux/${ARCH}; \
+    done && \
     rm /tmp/googletest-*.tar.gz
 
 # Jaeger Client
 ARG JAEGER_CLIENT_VERSION=0.6.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-jaeger-client-cpp/releases/download/${JAEGER_CLIENT_VERSION}/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/jaeger-client-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-jaeger-client-cpp/releases/download/${JAEGER_CLIENT_VERSION}/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/jaeger-client-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-jaeger-client-cpp/releases/download/${JAEGER_CLIENT_VERSION}/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-jaeger-client-cpp/releases/download/${JAEGER_CLIENT_VERSION}/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/jaeger-client-cpp-${JAEGER_CLIENT_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/jaeger-client-cpp-*.tar.gz
 
 # jsoncpp
 ARG JSONCPP_VERSION=1.9.5-1
-RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-        libjsoncpp-dev=1.7.4*
-RUN wget \
-        --output-document=/tmp/jsoncpp-${JSONCPP_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-jsoncpp/releases/download/${JSONCPP_VERSION}/jsoncpp-${JSONCPP_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/jsoncpp-${JSONCPP_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/jsoncpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/jsoncpp-${JSONCPP_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-jsoncpp/releases/download/${JSONCPP_VERSION}/jsoncpp-${JSONCPP_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/jsoncpp-${JSONCPP_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/jsoncpp-${JSONCPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-jsoncpp/releases/download/${JSONCPP_VERSION}/jsoncpp-${JSONCPP_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/jsoncpp-${JSONCPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/jsoncpp-*.tar.gz
 
 # libarchive
 ARG LIBARCHIVE_VERSION=3.3.2-2
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        libarchive-dev=3.4.0*
-RUN wget \
-        --output-document=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-libarchive/releases/download/${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/libarchive-*.tar.gz
-RUN wget \
-        --output-document=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-libarchive/releases/download/${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+        libarchive-dev=3.4.0* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                libarchive-dev:arm64=3.4.0* ;; \
+    esac
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-libarchive/releases/download/${LIBARCHIVE_VERSION}/libarchive-${LIBARCHIVE_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/libarchive-${LIBARCHIVE_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/libarchive-*.tar.gz
 
 # libffi (Android-only)
 ARG LIBFFI_VERSION=3.3-1
-RUN wget \
-        --output-document=/tmp/libffi-${LIBFFI_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-libffi/releases/download/${LIBFFI_VERSION}/libffi-${LIBFFI_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/libffi-${LIBFFI_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/libffi-*.tar.gz
-RUN wget \
-        --output-document=/tmp/libffi-${LIBFFI_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-libffi/releases/download/${LIBFFI_VERSION}/libffi-${LIBFFI_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/libffi-${LIBFFI_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/libffi-${LIBFFI_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-libffi/releases/download/${LIBFFI_VERSION}/libffi-${LIBFFI_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/libffi-${LIBFFI_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/libffi-*.tar.gz
 
 # libzip
 ARG LIBZIP_VERSION=1.8.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/libzip-${LIBZIP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/libzip-*.tar.gz
-RUN wget \
-        --output-document=/tmp/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/libzip-${LIBZIP_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/libzip-*.tar.gz
-RUN wget \
-        --output-document=/tmp/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/libzip-${LIBZIP_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/libzip-${LIBZIP_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-libzip/releases/download/${LIBZIP_VERSION}/libzip-${LIBZIP_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/libzip-${LIBZIP_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/libzip-*.tar.gz
 
 # nlohmann-json
 ARG NLOHMANN_JSON_VERSION=3.10.5-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-nlohmann-json/releases/download/${NLOHMANN_JSON_VERSION}/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/nlohmann-json-*.tar.gz
-RUN wget \
-        --output-document=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-nlohmann-json/releases/download/${NLOHMANN_JSON_VERSION}/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/nlohmann-json-*.tar.gz
-RUN wget \
-        --output-document=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-nlohmann-json/releases/download/${NLOHMANN_JSON_VERSION}/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-nlohmann-json/releases/download/${NLOHMANN_JSON_VERSION}/nlohmann-json-${NLOHMANN_JSON_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/nlohmann-json-${NLOHMANN_JSON_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/nlohmann-json-*.tar.gz
 
 # NTL (Linux-only)
 ARG NTL_VERSION=11.4.4-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-ntl/releases/download/${NTL_VERSION}/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/ntl-${NTL_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/ntl-${NTL_VERSION}-linux-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-ntl/releases/download/${NTL_VERSION}/ntl-${NTL_VERSION}-linux-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/ntl-${NTL_VERSION}-linux-${ARCH}.tar.gz \
+            --directory=/linux/${ARCH}; \
+    done && \
     rm /tmp/ntl-*.tar.gz
 
 # OpenSSL
 ARG OPENSSL_VERSION=1.1.1l-1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        libssl-dev=1.1.1*
-RUN wget \
-        --output-document=/tmp/openssl-${OPENSSL_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-openssl/releases/download/${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/openssl-${OPENSSL_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/openssl-*.tar.gz
-RUN wget \
-        --output-document=/tmp/openssl-${OPENSSL_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-openssl/releases/download/${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/openssl-${OPENSSL_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+        libssl-dev=1.1.1* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                libssl-dev:arm64=1.1.1* ;; \
+    esac
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/openssl-${OPENSSL_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-openssl/releases/download/${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/openssl-${OPENSSL_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/openssl-*.tar.gz
 
 # OpenTracing C++ API
 ARG OPENTRACING_CPP_VERSION=1.6.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-opentracing-cpp/releases/download/${OPENTRACING_CPP_VERSION}/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/opentracing-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-opentracing-cpp/releases/download/${OPENTRACING_CPP_VERSION}/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/opentracing-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-opentracing-cpp/releases/download/${OPENTRACING_CPP_VERSION}/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-opentracing-cpp/releases/download/${OPENTRACING_CPP_VERSION}/opentracing-cpp-${OPENTRACING_CPP_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/opentracing-cpp-${OPENTRACING_CPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/opentracing-cpp-*.tar.gz
 
 # PBC (Linux-only)
 ARG PBC_VERSION=0.5.14-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-pbc/releases/download/${PBC_VERSION}/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/pbc-${PBC_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/pbc-${PBC_VERSION}-linux-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-pbc/releases/download/${PBC_VERSION}/pbc-${PBC_VERSION}-linux-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/pbc-${PBC_VERSION}-linux-${ARCH}.tar.gz \
+            --directory=/linux/${ARCH}; \
+    done && \
     rm /tmp/pbc-*.tar.gz
 
 # Python (Android-only)
 ARG ANDROID_PYTHON_VERSION=3.7.16-1
-RUN wget \
-        --output-document=/tmp/python-${ANDROID_PYTHON_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-python/releases/download/${ANDROID_PYTHON_VERSION}/python-${ANDROID_PYTHON_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/python-${ANDROID_PYTHON_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/python-*.tar.gz
-RUN wget \
-        --output-document=/tmp/python-${ANDROID_PYTHON_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-python/releases/download/${ANDROID_PYTHON_VERSION}/python-${ANDROID_PYTHON_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/python-${ANDROID_PYTHON_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-python/releases/download/${ANDROID_PYTHON_VERSION}/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/python-*.tar.gz
 
 # sodium
 ARG SODIUM_VERSION=1.0.18-1
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        libsodium-dev=1.0.18*
-RUN wget \
-        --output-document=/tmp/sodium-${SODIUM_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-sodium/releases/download/${SODIUM_VERSION}/sodium-${SODIUM_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/sodium-${SODIUM_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/sodium-*.tar.gz
-RUN wget \
-        --output-document=/tmp/sodium-${SODIUM_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-sodium/releases/download/${SODIUM_VERSION}/sodium-${SODIUM_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/sodium-${SODIUM_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+        libsodium-dev=1.0.18* && \
+    case ${TARGETPLATFORM} in \
+        "linux/amd64") \
+            apt-get install -y --no-install-recommends \
+                libsodium-dev:arm64=1.0.18* ;; \
+    esac
+RUN for ARCH in x86_64 arm64-v8a; do \
+        wget \
+            --output-document=/tmp/sodium-${SODIUM_VERSION}-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-sodium/releases/download/${SODIUM_VERSION}/sodium-${SODIUM_VERSION}-android-${ARCH}.tar.gz && \
+        tar --extract \
+            --file=/tmp/sodium-${SODIUM_VERSION}-android-${ARCH}.tar.gz \
+            --directory=/android/${ARCH}; \
+    done && \
     rm /tmp/sodium-*.tar.gz
 
 # SWIG (Linux-only)
@@ -526,56 +438,28 @@ RUN case ${TARGETPLATFORM} in \
 
 # Apache Thrift
 ARG THRIFT_VERSION=0.12.0-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-thrift/releases/download/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/thrift-${THRIFT_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/thrift-*.tar.gz
-RUN wget \
-        --output-document=/tmp/thrift-${THRIFT_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-thrift/releases/download/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/thrift-${THRIFT_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/thrift-*.tar.gz
-RUN wget \
-        --output-document=/tmp/thrift-${THRIFT_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-thrift/releases/download/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/thrift-${THRIFT_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/thrift-${THRIFT_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-thrift/releases/download/${THRIFT_VERSION}/thrift-${THRIFT_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/thrift-${THRIFT_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/thrift-*.tar.gz
 
 # yaml-cpp
 ARG YAML_CPP_VERSION=0.6.2-1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=x86_64    ;; \
-        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/tst-race/ext-yaml-cpp/releases/download/${YAML_CPP_VERSION}/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/yaml-cpp-${YAML_CPP_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/usr/local && \
-    rm /tmp/yaml-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/yaml-cpp-${YAML_CPP_VERSION}-android-x86_64.tar.gz \
-        https://github.com/tst-race/ext-yaml-cpp/releases/download/${YAML_CPP_VERSION}/yaml-cpp-${YAML_CPP_VERSION}-android-x86_64.tar.gz && \
-    tar --extract \
-        --file=/tmp/yaml-cpp-${YAML_CPP_VERSION}-android-x86_64.tar.gz \
-        --directory=/android/x86_64 && \
-    rm /tmp/yaml-cpp-*.tar.gz
-RUN wget \
-        --output-document=/tmp/yaml-cpp-${YAML_CPP_VERSION}-android-arm64-v8a.tar.gz \
-        https://github.com/tst-race/ext-yaml-cpp/releases/download/${YAML_CPP_VERSION}/yaml-cpp-${YAML_CPP_VERSION}-android-arm64-v8a.tar.gz && \
-    tar --extract \
-        --file=/tmp/yaml-cpp-${YAML_CPP_VERSION}-android-arm64-v8a.tar.gz \
-        --directory=/android/arm64-v8a && \
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/yaml-cpp-${YAML_CPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-yaml-cpp/releases/download/${YAML_CPP_VERSION}/yaml-cpp-${YAML_CPP_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/yaml-cpp-${YAML_CPP_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
     rm /tmp/yaml-cpp-*.tar.gz
