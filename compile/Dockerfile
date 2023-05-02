@@ -103,7 +103,7 @@ RUN apt-get update -y && \
     case ${TARGETPLATFORM} in \
         "linux/amd64") \
             apt-get install -y --no-install-recommends \
-                python3.7-dev:arm64=${PYTHON_VERSION}-* ;; \
+                libpython3.7-dev:arm64=${PYTHON_VERSION}-* ;; \
     esac && \
     wget https://bootstrap.pypa.io/get-pip.py && \
     python3.7 get-pip.py && \
