@@ -19,7 +19,7 @@ FROM ubuntu:20.04
 # Install base utilities (to handle installs)
 RUN apt-get -y update && \
     apt-get install -y --no-install-recommends \
-        openjdk-8-jre-headless \
+        openjdk-8-jre \
         wget \
         unzip
 
@@ -51,6 +51,7 @@ COPY config.ini /root/.android/avd/android_29.avd/config.ini
 RUN apt-get -y update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         expect=5.45.4-* \
+        openbox=3.6.1-* \
         systemd \
         tightvncserver=1.3.10-* \
         xfonts-base=1:1.0.* && \
@@ -66,11 +67,11 @@ RUN chmod +x /tmp/vncpass.sh; sync && \
     rm /tmp/vncpass.sh && \
     apt-get remove -y expect && apt-get autoremove -y
 
-COPY run-race-install.sh ${APP_ROOT}
-COPY health-check.sh ${APP_ROOT}
-
 # Setup systemd services
-COPY print_env_vars.sh \
+COPY health-check.sh \
+     print_env_vars.sh \
+     race_wrapper.sh \
+     run-race-install.sh \
      /code/
 COPY race-env.service \
      vncserver.service \
@@ -89,8 +90,8 @@ RUN systemctl enable vncserver race-emulator watchdog race_install race-env
 HEALTHCHECK --interval=10s \
     --retries=12 \
     --start-period=5m \
-    CMD bash ${APP_ROOT}/health-check.sh
+    CMD bash /code/health-check.sh
 
 # Run Command
 STOPSIGNAL SIGRTMIN+3
-CMD [ "/sbin/init" ]
+CMD [ "/lib/systemd/systemd" ]
