@@ -391,14 +391,17 @@ RUN for ARCH in x86_64 arm64-v8a; do \
     rm /tmp/pbc-*.tar.gz
 
 # Python (Android-only)
-ARG ANDROID_PYTHON_VERSION=3.7.16-1
+ARG ANDROID_PYTHON_VERSION=3.7.16-2
 RUN for ARCH in x86_64 arm64-v8a; do \
         wget \
             --output-document=/tmp/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz \
             https://github.com/tst-race/ext-python/releases/download/${ANDROID_PYTHON_VERSION}/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz && \
         tar --extract \
             --file=/tmp/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz \
-            --directory=/android/${ARCH}; \
+            --directory=/android/${ARCH} && \
+        wget \
+            --output-document=/android/${ARCH}/python-packages-android-${ARCH}.tar.gz \
+            https://github.com/tst-race/ext-python/releases/download/${ANDROID_PYTHON_VERSION}/python-packages-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz; \
     done && \
     rm /tmp/python-*.tar.gz
 
