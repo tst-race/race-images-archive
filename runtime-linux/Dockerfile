@@ -202,7 +202,7 @@ RUN rustup component add rustfmt && \
 #     * raceclient-android: https://gitlab.race.twosixlabs.com/race-common/raceclient-android/-/blob/15887ee8d68b8789b8e74c3ab9a763c48555f4b5/app/src/main/java/com/twosix/race/RaceSdkCreator.java#L354
 #     * the external dependencies version in THIS repo (external-dependencies/versions.sh): https://gitlab.race.twosixlabs.com/race-ta3/race-images-base/-/blob/f98151bd9a8cb05fd322614b9919fba513b4da6f/external-dependencies/versions.sh#L44
 #     * the version that the compile image pulls from artifactory in THIS repo (compile/Dockerfile): https://gitlab.race.twosixlabs.com/race-ta3/race-images-base/-/blob/develop/compile/Dockerfile#L449
-RUN PYTHON_VERSION="3.7.16" && \
+RUN PYTHON_VERSION="3.7.17" && \
     apt update && \
     apt install software-properties-common -y && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
@@ -949,3 +949,5 @@ RUN mkdir -p /usr/local/lib/race/artifact-manager && \
 # Run Command
 STOPSIGNAL SIGRTMIN+3
 CMD [ "/sbin/init" ]
+
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/race/ta3/race/lib
