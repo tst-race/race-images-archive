@@ -10,7 +10,7 @@ User=root
 Type=simple
 Restart=always
 RestartSec=1
-ExecStart=/bin/bash -c "sleep 5 && emulator @android_29 -no-audio -ranchu -no-boot-anim -gpu swiftshader_indirect -sdcard /aux_data/sdcard.img"
+ExecStart=/bin/bash -c "sleep 5 && emulator @android_29 -no-audio -ranchu -no-boot-anim -gpu swiftshader_indirect"
 StandardOutput=/log/emulator-stdout.log
 StandardError=/log/emulator-stderr.log
 
