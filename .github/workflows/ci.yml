@@ -11,6 +11,12 @@ permissions:
   packages: write
 
 jobs:
+  bastion-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: bastion
+      image-name: ${{ github.repository }}/race-bastion
+
   compile-image:
     uses: ./.github/workflows/build-image.yml
     with:
