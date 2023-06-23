@@ -8,6 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN mkdir -p ${APP_ROOT}
 WORKDIR ${APP_ROOT}
 
+# Create User
+RUN useradd -ms /bin/bash -g root -G sudo -u 2000 --password=rib rib && \
+    mkdir /home/rib/.ssh && \
+    touch /home/rib/.ssh/authorized_keys && \
+    chmod 0400 /home/rib/.ssh/authorized_keys && \
+    chown -R rib /home/rib
+
 # Configure sshd
 COPY ./sshd_config /etc/ssh/sshd_config
 
