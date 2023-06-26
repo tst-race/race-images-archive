@@ -88,7 +88,7 @@ RUN wget \
     rm /tmp/rustup.sh
 
 # Python
-ARG PYTHON_VERSION=3.7.16
+ARG PYTHON_VERSION=3.7.17
 RUN apt-get update -y && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
     apt-get update -y && \
