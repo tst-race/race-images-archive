@@ -96,8 +96,8 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
         patchelf \
         pkg-config=0.29.1* \
         rhash=1.3.9* \
+        supervisor=4.1.0-* \
         sysstat=12.2.0* \
-        systemd \
         tcpdump=4.9.3* \
         time=1.7-25.1* \
         traceroute=1:2.1.0* \
@@ -898,23 +898,13 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 # Configure systemd
 ###
 
-ENV container docker
-ENV SYSTEMD_PROC_CMDLINE "systemd.unified_cgroup_hierarchy=1 cgroup_no_v1=all systemd.legacy_systemd_cgroup_controller=0"
+COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY race_wrapper.sh \
-    print_env_vars.sh \
-    uninstall-race.sh \
-    /code/
-COPY race-env.service \
-    jaeger-collector.service \
-    jaeger-agent.service \
-    uninstall-race.service \
-    race-daemon.service \
-    /etc/systemd/system/
-RUN systemctl disable $(systemctl list-unit-files --state=enabled | head -n -1 | tail -n +2 | awk '{print $1}')
+   print_env_vars.sh \
+   uninstall-race.sh \
+   /code/
 RUN apt install cron
-RUN systemctl enable cron binfmt-support uninstall-race
 RUN mkdir /race-service-logs
-
 
 # Copy nginx configuration and systemd service files.
 COPY nginx.conf.selfsigned /usr/local/nginx/conf/nginx.conf
@@ -936,10 +926,7 @@ RUN ln -s /usr/local/lib/race/ta3/race-daemon/bin/race-daemon-linux /usr/local/b
     ln -s /usr/local/lib/race/ta3/race/lib/java/racesdk-java-shims-1.jar /usr/local/lib/race/java/racesdk-java-shims-1.jar
 
 HEALTHCHECK --interval=30s --timeout=10s \
-    CMD systemctl is-active --quiet race-daemon
-
-# Enable linux race-daemon
-RUN systemctl enable jaeger-collector jaeger-agent race-daemon
+    CMD supervisorctl status race-daemon | grep RUNNING
 
 # Create all necessary plugin directories
 RUN mkdir -p /usr/local/lib/race/artifact-manager && \
@@ -948,6 +935,6 @@ RUN mkdir -p /usr/local/lib/race/artifact-manager && \
 
 # Run Command
 STOPSIGNAL SIGRTMIN+3
-CMD [ "/sbin/init" ]
+CMD [ "/usr/bin/supervisord", "-n" ]
 
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/race/ta3/race/lib
