@@ -52,7 +52,6 @@ RUN apt-get -y update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         expect=5.45.4-* \
         openbox=3.6.1-* \
-        systemd \
         tightvncserver=1.3.10-* \
         xfonts-base=1:1.0.* && \
     apt-get clean
@@ -67,20 +66,16 @@ RUN chmod +x /tmp/vncpass.sh; sync && \
     rm /tmp/vncpass.sh && \
     apt-get remove -y expect && apt-get autoremove -y
 
-# Setup systemd services
+# Setup supervisor services
+RUN apt-get install -y supervisor=4.1.0-*
+COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY health-check.sh \
      print_env_vars.sh \
      race_wrapper.sh \
      run-race-install.sh \
      /code/
-COPY race-env.service \
-     vncserver.service \
-     race-emulator.service \
-     watchdog.service \
-     race_install.service \
-     /etc/systemd/system/
 
-RUN systemctl enable vncserver race-emulator watchdog race_install race-env 
+COPY config.ini /root/.android/avd/android_29.avd/config.ini
 
 ###
 # Configure Docker Container
@@ -94,4 +89,4 @@ HEALTHCHECK --interval=10s \
 
 # Run Command
 STOPSIGNAL SIGRTMIN+3
-CMD [ "/lib/systemd/systemd" ]
+CMD [ "/usr/bin/supervisord", "-n" ]

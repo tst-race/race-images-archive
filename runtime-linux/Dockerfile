@@ -96,7 +96,6 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
         patchelf \
         pkg-config=0.29.1* \
         rhash=1.3.9* \
-        supervisor=4.1.0-* \
         sysstat=12.2.0* \
         tcpdump=4.9.3* \
         time=1.7-25.1* \
@@ -895,9 +894,10 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 
 
 ###
-# Configure systemd
+# Configure supervisor
 ###
 
+RUN apt-get install -y supervisor=4.1.0-*
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY race_wrapper.sh \
    print_env_vars.sh \
@@ -906,9 +906,8 @@ COPY race_wrapper.sh \
 RUN apt install cron
 RUN mkdir /race-service-logs
 
-# Copy nginx configuration and systemd service files.
+# Copy nginx configuration service files.
 COPY nginx.conf.selfsigned /usr/local/nginx/conf/nginx.conf
-COPY nginx.service /lib/systemd/system/nginx.service
 
 # Setup certificates for nginx.
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=raceserver" -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt && \
@@ -933,6 +932,7 @@ RUN mkdir -p /usr/local/lib/race/artifact-manager && \
     mkdir -p /usr/local/lib/race/ta1 && \
     mkdir -p /usr/local/lib/race/ta2
 
+ 
 # Run Command
 STOPSIGNAL SIGRTMIN+3
 CMD [ "/usr/bin/supervisord", "-n" ]
