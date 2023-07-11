@@ -897,7 +897,7 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 # Configure supervisor
 ###
 
-RUN apt-get install -y supervisor=4.1.0-*
+RUN apt-get update -y && apt-get install -y supervisor=4.1.0-*
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY race_wrapper.sh \
    print_env_vars.sh \
