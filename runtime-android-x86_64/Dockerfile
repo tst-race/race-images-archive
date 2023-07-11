@@ -67,7 +67,7 @@ RUN chmod +x /tmp/vncpass.sh; sync && \
     apt-get remove -y expect && apt-get autoremove -y
 
 # Setup supervisor services
-RUN apt-get install -y supervisor=4.1.0-*
+RUN apt-get update -y && apt-get install -y supervisor=4.1.0-*
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY health-check.sh \
      print_env_vars.sh \
