@@ -247,7 +247,7 @@ RUN PYTHON_VERSION="3.7.17" && \
 #     update-alternatives --set python3-config /usr/bin/python3.8-config
 
 # Configure Python Environment
-ENV PYTHONPATH="$PYTHONPATH:$APP_ROOT:/usr/local/lib:/usr/local/lib/race/python/:/usr/local/lib/race/ta1/:/usr/local/lib/race/ta2/:/usr/local/lib/race/ta3/race/lib/python"
+ENV PYTHONPATH="$PYTHONPATH:$APP_ROOT:/usr/local/lib:/usr/local/lib/race/python/:/usr/local/lib/race/network-manager/:/usr/local/lib/race/comms/:/usr/local/lib/race/core/race/lib/python"
 RUN ln -fs /usr/bin/python3.7 /usr/bin/python
 RUN ln -fs /usr/bin/python3.7 /usr/bin/python3
 
@@ -929,11 +929,11 @@ RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Denial/L
 # Creating Symlinks for node-daemon, racesecli, racetestapp, python, and racesdk java shims.
 ###
 
-RUN ln -s /usr/local/lib/race/ta3/race-daemon/bin/race-daemon-linux /usr/local/bin/race-daemon-linux && \
-    ln -s /usr/local/lib/race/ta3/race/bin/racesecli /usr/local/bin/racesecli && \
-    ln -s /usr/local/lib/race/ta3/race/bin/racetestapp /usr/local/bin/racetestapp && \
-    ln -s /usr/local/lib/race/ta3/race/lib/python /usr/local/lib/race/python && \
-    ln -s /usr/local/lib/race/ta3/race/lib/java/racesdk-java-shims-1.jar /usr/local/lib/race/java/racesdk-java-shims-1.jar
+RUN ln -s /usr/local/lib/race/core/race-daemon/bin/race-daemon-linux /usr/local/bin/race-daemon-linux && \
+    ln -s /usr/local/lib/race/core/race/bin/racesecli /usr/local/bin/racesecli && \
+    ln -s /usr/local/lib/race/core/race/bin/racetestapp /usr/local/bin/racetestapp && \
+    ln -s /usr/local/lib/race/core/race/lib/python /usr/local/lib/race/python && \
+    ln -s /usr/local/lib/race/core/race/lib/java/racesdk-java-shims-1.jar /usr/local/lib/race/java/racesdk-java-shims-1.jar
 
 HEALTHCHECK --interval=30s --timeout=10s \
     CMD systemctl is-active --quiet race-daemon
@@ -950,4 +950,4 @@ RUN mkdir -p /usr/local/lib/race/artifact-manager && \
 STOPSIGNAL SIGRTMIN+3
 CMD [ "/sbin/init" ]
 
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/race/ta3/race/lib
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib/race/core/race/lib

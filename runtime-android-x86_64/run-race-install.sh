@@ -46,7 +46,7 @@ done
 echo_with_time "waiting to prevent race condition..."
 sleep 10
 echo_with_time "installing race node daemon..."
-adb install -g -t /android/x86_64/lib/race/ta3/race-daemon/race-daemon-android-debug.apk
+adb install -g -t /android/x86_64/lib/race/core/race-daemon/race-daemon-android-debug.apk
 # Make the daemon the device owner so it can perform silent installs
 adb shell dpm set-device-owner com.twosix.race.daemon/.AdminReceiver
 # Disable Play Protect
@@ -58,7 +58,7 @@ if [[ $UNINSTALL_RACE = "yes" ]]; then
 else
     # Install race app
     echo_with_time "installing race client..."
-    adb install -g /android/x86_64/lib/race/ta3/race/race.apk
+    adb install -g /android/x86_64/lib/race/core/race/race.apk
     echo_with_time "race client installed"
 
     # Copy Plugins

@@ -25,10 +25,10 @@ if [[ $UNINSTALL_RACE = "yes" ]]; then
     rm -rf /usr/local/lib/librace*
     rm -rf /usr/local/lib/libRace*
     rm -rf /usr/local/lib/ta2Plugin*
-    rm -rf /usr/local/lib/race/ta1/*
-    rm -rf /usr/local/lib/race/ta2/*
-    rm -rf /usr/local/lib/race/ta3/race
-    rm -rf /usr/local/lib/race/ta31/*
+    rm -rf /usr/local/lib/race/network-manager/*
+    rm -rf /usr/local/lib/race/comms/*
+    rm -rf /usr/local/lib/race/core/race
+    rm -rf /usr/local/lib/race/artifact-manager/*
     rm -rf /config/*
 else
     echo "Skipping, nothing is uninstalled"
