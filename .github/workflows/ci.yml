@@ -1,0 +1,38 @@
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - 'main'
+
+permissions:
+  packages: write
+
+jobs:
+  bastion-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: bastion
+      image-name: ${{ github.repository }}/race-bastion
+
+  compile-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: compile
+      image-name: ${{ github.repository }}/race-compile
+
+  runtime-android-x86_64-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: runtime-android-x86_64
+      image-name: ${{ github.repository }}/race-runtime-android-x86_64
+      platforms: linux/amd64
+
+  runtime-linux-image:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: runtime-linux
+      image-name: ${{ github.repository }}/race-runtime-linux
+      platforms: linux/amd64

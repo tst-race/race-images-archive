@@ -1,0 +1,17 @@
+[Unit]
+Description=RACE Daemon
+Wants=race-env.service
+After=network.target race-env.service
+StartLimitIntervalSec=0
+
+[Service]
+EnvironmentFile=/code/race.env
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/local/bin/race-daemon-linux
+StandardOutput=file:/race-service-logs/race-daemon.log
+StandardError=file:/race-service-logs/race-daemon.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=RACE Environment Initialization
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /code/print_env_vars.sh
+StandardOutput=file:/code/race.env
+
+[Install]
+WantedBy=multi-user.target
