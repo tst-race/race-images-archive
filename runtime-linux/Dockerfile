@@ -928,9 +928,9 @@ HEALTHCHECK --interval=30s --timeout=10s \
     CMD supervisorctl status race-daemon | grep RUNNING
 
 # Create all necessary plugin directories
-RUN mkdir -p /usr/local/lib/race/artifact-manager && \
-    mkdir -p /usr/local/lib/race/ta1 && \
-    mkdir -p /usr/local/lib/race/ta2
+#RUN mkdir -p /usr/local/lib/race/artifact-manager && \
+#    mkdir -p /usr/local/lib/race/network-manager && \
+#    mkdir -p /usr/local/lib/race/comms
 
  
 # Run Command
