@@ -874,26 +874,6 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
     libvirt-daemon-system libvirt-clients
 
 ###
-# Add Files To Docker Images and Configure Services
-###
-
-
-# # Configure sshd
-# RUN mkdir -p /etc/ssh/ && \
-#     mkdir -p /root/.ssh/
-# COPY sshd_config /etc/ssh/sshd_config
-# COPY bastion_key.pub /root/.ssh/authorized_keys
-# RUN chmod 0700 /root/.ssh && \
-#     chmod 0400 /root/.ssh/authorized_keys
-
-# # Install Root Cert (https://www.techrepublic.com/article/how-to-install-ca-certificates-in-ubuntu-server/)
-# RUN mkdir -p /usr/local/share/ca-certificates
-# COPY ca.cert.pem.crt /usr/local/share/ca-certificates/ca.cert.pem.crt
-# RUN chmod 0644 /usr/local/share/ca-certificates/ca.cert.pem.crt && \
-#     update-ca-certificates
-
-
-###
 # Configure supervisor
 ###
 
@@ -927,12 +907,6 @@ RUN ln -s /usr/local/lib/race/core/race-daemon/bin/race-daemon-linux /usr/local/
 HEALTHCHECK --interval=30s --timeout=10s \
     CMD supervisorctl status race-daemon | grep RUNNING
 
-# Create all necessary plugin directories
-#RUN mkdir -p /usr/local/lib/race/artifact-manager && \
-#    mkdir -p /usr/local/lib/race/network-manager && \
-#    mkdir -p /usr/local/lib/race/comms
-
- 
 # Run Command
 STOPSIGNAL SIGRTMIN+3
 CMD [ "/usr/bin/supervisord", "-n" ]

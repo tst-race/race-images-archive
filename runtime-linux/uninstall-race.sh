@@ -24,7 +24,6 @@ if [[ $UNINSTALL_RACE = "yes" ]]; then
     echo "Uninstalling RACE..."
     rm -rf /usr/local/lib/librace*
     rm -rf /usr/local/lib/libRace*
-    rm -rf /usr/local/lib/ta2Plugin*
     rm -rf /usr/local/lib/race/network-manager/*
     rm -rf /usr/local/lib/race/comms/*
     rm -rf /usr/local/lib/race/core/race
