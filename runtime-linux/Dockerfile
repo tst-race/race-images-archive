@@ -885,9 +885,10 @@ COPY race_wrapper.sh \
    /code/
 RUN apt install cron
 RUN mkdir /race-service-logs
+RUN mkdir /logs
 
 # Copy nginx configuration service files.
-COPY nginx.conf.selfsigned /usr/local/nginx/conf/nginx.conf
+COPY nginx.conf.selfsigned /usr/local/conf/nginx.conf
 
 # Setup certificates for nginx.
 RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=raceserver" -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt && \
