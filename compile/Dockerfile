@@ -468,6 +468,8 @@ RUN for OS in linux android; do \
     done && \
     rm /tmp/yaml-cpp-*.tar.gz
 
+RUN apt-get update -y && apt-get -y install git libgmp3-dev=2:6.2.*
+
 # Ensure these environment variables exist, even if they are empty
 ENV RACE_NODE_TYPE= \
     RACE_PERSONA= \
