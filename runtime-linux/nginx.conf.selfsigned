@@ -49,7 +49,7 @@ http {
 
         # DASH files
         location /dash {
-           root /ramfs/sri-ta2/steg;
+           root /ramfs/destini/steg;
         }
 
         # HLS files
@@ -75,7 +75,7 @@ rtmp {
 
             dash on;
             dash_nested on;
-            dash_path /ramfs/sri-ta2/steg/dash;
+            dash_path /ramfs/destini/steg/dash;
             dash_fragment 3;
             #dash_playlist_length 120;
 	    dash_playlist_length 10m;

@@ -246,7 +246,7 @@ RUN PYTHON_VERSION="3.7.17" && \
 #     update-alternatives --set python3-config /usr/bin/python3.8-config
 
 # Configure Python Environment
-ENV PYTHONPATH="$PYTHONPATH:$APP_ROOT:/usr/local/lib:/usr/local/lib/race/python/:/usr/local/lib/race/network-manager/:/usr/local/lib/race/comms/:/usr/local/lib/race/core/race/lib/python"
+ENV PYTHONPATH="$PYTHONPATH:$APP_ROOT:/usr/local/lib:/usr/local/lib/race/python/:/usr/local/lib/race/network-manager/:/usr/local/lib/race/comms/:/usr/local/lib/race/core/race/lib/python:/usr/local/lib/python3.7/dist-packages"
 RUN ln -fs /usr/bin/python3.7 /usr/bin/python
 RUN ln -fs /usr/bin/python3.7 /usr/bin/python3
 
@@ -392,7 +392,7 @@ RUN python3.7 -m pip install --no-cache-dir \
         flickr_api \
         imageio~=2.9.0 \
         ipython~=7.19.0 \
-        pillow~=8.0.1 \
+        pillow~=9.5.0 \
         PyTumblr \
         reedsolo~=1.5.4 \
         selenium~=3.141.0 \
@@ -502,7 +502,7 @@ RUN python3.7 -m pip install --no-cache-dir \
     onnx==1.10.2 \
     opencv-python~=4.5.1.48 \
     paramiko==2.7.2 \
-    Pillow==8.0.0 \
+    Pillow==9.5.0 \
     ping3==3.0.1 \
     protobuf==3.20.1 \
     pyautogui==0.9.53 \
