@@ -122,6 +122,8 @@ RUN apt-get update -y && \
         clang-format-10=1:10.* \
         clang-tidy-10=1:10.* \
         lcov=1.14* \
+	libjsoncpp-dev \
+	libevent-dev \
         # JDK 11 is needed for google-java-format
         m4=1.4.* \
         openjdk-11-jre-headless=11.0* \
