@@ -121,6 +121,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
         clang-format-10=1:10.* \
         clang-tidy-10=1:10.* \
+	g++=4:9.3.* \
         lcov=1.14* \
 	libjsoncpp-dev \
 	libevent-dev \
