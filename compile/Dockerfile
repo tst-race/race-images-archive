@@ -14,7 +14,7 @@
 # limitations under the License.
 # 
 
-FROM ghcr.io/tst-race/ext-builder:v1
+FROM ghcr.io/tst-race/ext-builder:main
 
 ###
 # Compilers/tools
