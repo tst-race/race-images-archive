@@ -395,7 +395,7 @@ RUN for ARCH in x86_64 arm64-v8a; do \
     rm /tmp/pbc-*.tar.gz
 
 # Python (Android-only)
-ARG ANDROID_PYTHON_VERSION=3.7.16-2
+ARG ANDROID_PYTHON_VERSION=3.7.16-3
 RUN for ARCH in x86_64 arm64-v8a; do \
         wget \
             --output-document=/tmp/python-${ANDROID_PYTHON_VERSION}-android-${ARCH}.tar.gz \
