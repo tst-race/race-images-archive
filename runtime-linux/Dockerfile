@@ -19,24 +19,6 @@ FROM --platform=$TARGETPLATFORM nvidia/cuda:11.7.1-devel-ubuntu20.04 as base
 ARG TARGETARCH
 ARG TARGETPLATFORM
 
-# install apt key
-# FROM base as amd64-apt-key
-# ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-${TARGETARCH}/jre/lib/${TARGETARCH}/server/"
-# RUN apt-key del 7fa2af80 && \
-#     apt-key adv --fetch-keys \
-#         https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
-
-# # in case of "E: The repository 'http://ports.ubuntu.com/ubuntu-ports focal-security InRelease' is not signed."
-# # known signing issue on arm64 arch: https://askubuntu.com/questions/1263284/apt-update-throws-signature-error-in-ubuntu-20-04-container-on-arm
-# FROM base as arm64-apt-key
-# ENV LD_LIBRARY_PATH="/usr/local/lib/:/usr/local/bin/:/usr/lib/jvm/java-1.8.0-openjdk-arm64/jre/lib/aarch64/server/"
-# RUN apt-key del A4B469963BF863CC && \
-#     apt-key adv --fetch-keys \
-#         https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/sbsa/3bf863cc.pub
-    
-# #declare common installs (executed towards the end)
-# FROM ${TARGETARCH}-apt-key as common-installs
-
 ###
 # Setup environment
 ###
@@ -389,90 +371,14 @@ WORKDIR ${TMP_ROOT}
 RUN python3.7 -m pip install --no-cache-dir \
         beautifulsoup4~=4.9.3 \
         Flask~=2.0.3 \
-        flickr_api \
         imageio~=2.9.0 \
         ipython~=7.19.0 \
         pillow~=9.5.0 \
-        PyTumblr \
         reedsolo~=1.5.4 \
-        selenium~=3.141.0 \
-        selenium-requests~=1.3 \
-        selenium-wire~=2.1.2
-
-# Install Galois TA2 Linux Dependencies
-RUN apt-get -y update && \
-    apt-get install -y --no-install-recommends \
-        apache2=2.4.41-4* \
-        ezstream=1.0.1* \
-        gnutls-bin=3.6* \
-        liblz4-tool=1.9.2* \
-        nodejs=10.19.0* \
-        openssl=1.1.1* \
-        vlc=3.0.9* \
-        vorbis-tools=1.4.0* \
-        zstd=1.4.4*
-
-# Installing Icecast (and sha256sum) for Galois
-# TODO
-# RUN --mount=type=secret,id=jfrog_token CI=true \
-#     jfrog rt download \
-#         twosix-generic-prod-local/icecast2/*/sha256sum-icecast2-* \
-#         ${TMP_ROOT}/icecast2-sha256sum \
-#         --flat \
-#         --url=${ARTIFACTORY_URL} \
-#         --props ARCH=${TARGETARCH} \
-#         --access-token=$(cat /run/secrets/jfrog_token)
-
-# TODO
-# RUN --mount=type=secret,id=jfrog_token CI=true \
-#     jfrog rt download \
-#         twosix-generic-prod-local/icecast2/*/icecast2* \
-#         ${TMP_ROOT}/icecast2.deb \
-#         --flat \
-#         --url=${ARTIFACTORY_URL} \
-#         --props ARCH=${TARGETARCH} \
-#         --access-token=$(cat /run/secrets/jfrog_token) && \
-#     echo "$(cat ${TMP_ROOT}/icecast2-sha256sum) ${TMP_ROOT}/icecast2.deb" | sha256sum --check --status && \
-#     apt-get install -yy ${TMP_ROOT}/icecast2.deb && \
-#     rm ${TMP_ROOT}/icecast2.deb && \
-#     rm ${TMP_ROOT}/icecast2-sha256sum
-
-# Install Galois TA2 Python Dependencies
-RUN python3.7 -m pip install --no-cache-dir \
-    astor~=0.8.0 \
-    bitstring>=3.1.6 \
-    blurhash==1.1.4 \
-    certifi==2020.6.20 \
-    chardet==3.0.4 \
-    decorator==4.4.2 \
-    fire==0.2.1 \
-    idna==2.10 \
-    Keras>=2.3.1 \
-    Mastodon.py==1.5.1 \
-    matplotlib>=3.2.1 \
-    python-gitlab==2.6.0 \
-    python-magic==0.4.18 \
-    regex>=2020.7.14 \
-    six==1.15.0 \
-    urllib3==1.25.9 
 
 RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager~=0.9.0 && \
     webdrivermanager firefox --linkpath /usr/local/bin
-
-# Install Galois Plik dependency
-ARG PLIK_VERSION=1.3.1
-RUN case ${TARGETPLATFORM} in \
-        "linux/amd64") LINUX_ARCH=amd64 ;; \
-        "linux/arm64") LINUX_ARCH=arm64 ;; \
-    esac && \
-    wget \
-        --output-document=/tmp/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        https://github.com/root-gg/plik/releases/download/${PLIK_VERSION}/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
-    tar --extract \
-        --file=/tmp/plik-${PLIK_VERSION}-linux-${LINUX_ARCH}.tar.gz \
-        --directory=/opt && \
-    rm /tmp/plik-*.tar.gz
 
 # When updating the major version of chrome, will also need to update the chromedriver
 # to an appropriate version. See https://chromedriver.chromium.org/downloads/version-selection
@@ -494,7 +400,6 @@ RUN python3.7 -m pip install --no-cache-dir \
     boto3==1.24.16 \
     cupy-cuda102==10.0.0 \
     essential_generators==1.0 \
-    flickr-api==0.7.3 \
     google-api-python-client==2.51.0 \
     google-auth-httplib2==0.1.0 \
     google-auth-oauthlib==0.4.6 \
@@ -507,7 +412,6 @@ RUN python3.7 -m pip install --no-cache-dir \
     protobuf==3.20.1 \
     pyautogui==0.9.53 \
     pyee==6.0.0 \
-    pyimgur==0.6.0 \
     pypng==0.0.20 \
     pyppeteer==0.0.25 \
     pysftp==0.2.9 \
@@ -517,70 +421,11 @@ RUN python3.7 -m pip install --no-cache-dir \
     tensorflow-estimator==2.9.0 \
     websockets==6.0
 
-# Install STR Android dependencies (Tensorflow lite)
-# TODO
-# RUN --mount=type=secret,id=jfrog_token CI=true \
-#     jfrog rt download \
-#         twosix-generic-prod-local/tensorflow-lite/0.1.0/*.aar \
-#         ${ANDROID_AAR_DEPS} \
-#         --flat \
-#         --url=${ARTIFACTORY_URL} \
-#         --access-token=$(cat /run/secrets/jfrog_token)
-
-# Install STR Android dependencies (JavaNpy)
-# TODO rename aar dependencies dir because it can be used for jars as well
-# TODO
-# RUN --mount=type=secret,id=jfrog_token CI=true \
-#     jfrog rt download \
-#         twosix-generic-prod-local/JavaNpy/1.0/JavaNpy.jar \
-#         ${ANDROID_AAR_DEPS} \
-#         --flat \
-#         --url=${ARTIFACTORY_URL} \
-#         --access-token=$(cat /run/secrets/jfrog_token)
-
-
-# Install SRI TA2 Minecraft
-# TODO
-# RUN --mount=type=secret,id=jfrog_token CI=true \
-#     jfrog rt download \
-#         twosix-generic-prod-local/minecraft/sri-ta2-1/MinecraftProxy.tar \
-#         /tmp/MinecraftProxy.tar \
-#         --flat \
-#         --url=${ARTIFACTORY_URL} \
-#         --access-token=$(cat /run/secrets/jfrog_token) && \
-#     tar -xvkf /tmp/MinecraftProxy.tar -C /usr/local/lib && \
-#     /usr/local/lib/MinecraftProxy/client/gradlew --no-daemon && \
-#     rm /tmp/MinecraftProxy.tar
 
 # Install Georgetown Linux Dependencies
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
     gnupg=2.2.* 
 
-
-# install platform specific packages, where there are conflicting versions, names, or deps
-# firefox
-#   SRI needs version 103 for avideo, but it doesn't exist for arm64
-#   add if/when needed
-# torch v1.7.0 and torchvision v0.8.1 not available for arm64
-#   there are a concerning number of breaking changes:
-#   pytorch "Backwards Incompatible Changes" https://newreleases.io/project/github/pytorch/pytorch/release/v1.8.0
-#   torchvision "Backwards Incompatible Changes" and "Deprecations" https://github.com/pytorch/vision/releases?page=2
-#   the older versions may need to be built from source
-# tensorflow
-#   tensorflow-aarch64 v2.7.* is the earliest rev available for aarch64
-#   there are several breaking changes in releases 2.6.0 and 2.7.0 noted here
-#   https://github.com/tensorflow/tensorflow/releases?page=3
-#   https://github.com/tensorflow/tensorflow/releases?page=2
-#   to compile from source: https://github.com/KumaTea/tensorflow-aarch64/releases
-# 
-# google-chrome-stable not available for arm64
-#   chromium is suggested workaround but we don't yet know if this breaks things for STR TA2 System Dependencies
-#   https://askubuntu.com/questions/1383789/install-chrome-on-ubuntu-debian-with-arm64
-#
-# cuda-11.7 stubs do not have same path for both architectures when configuring for linker
-#
-# numba
-#   install conda to install numba on arm64 https://repo.anaconda.com/miniconda/
 
 # amd64-specific binaries
 FROM base as amd64-installs
