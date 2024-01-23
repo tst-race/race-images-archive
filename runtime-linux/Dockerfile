@@ -374,7 +374,7 @@ RUN python3.7 -m pip install --no-cache-dir \
         imageio~=2.9.0 \
         ipython~=7.19.0 \
         pillow~=9.5.0 \
-        reedsolo~=1.5.4 \
+        reedsolo~=1.5.4
 
 RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager~=0.9.0 && \
