@@ -412,6 +412,16 @@ RUN apt-get -y update && \
         vorbis-tools=1.4.0* \
         zstd=1.4.4*
 
+# Install Butkus Python dependencies
+RUN python3.7 -m pip install --no-cache-dir \
+    transformers~=4.30.2 \
+    torch~=1.13.1 \
+    fixedint~=0.2.0
+
+#local python3.8 versions that don't work with 3.7
+#transformers~=4.36.2
+#torch~=2.1.2
+
 # Installing Icecast (and sha256sum) for Galois
 # TODO
 # RUN --mount=type=secret,id=jfrog_token CI=true \
