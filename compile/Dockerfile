@@ -14,7 +14,7 @@
 # limitations under the License.
 # 
 
-FROM ghcr.io/tst-race/ext-builder:v1
+FROM ghcr.io/tst-race/ext-builder:main
 
 ###
 # Compilers/tools
@@ -123,10 +123,13 @@ RUN apt-get update -y && \
         clang-tidy-10=1:10.* \
         lcov=1.14* \
 	libjsoncpp-dev \
+        libjson-c-dev \
 	libevent-dev \
+        libsqlite3-dev \
         # JDK 11 is needed for google-java-format
         m4=1.4.* \
         openjdk-11-jre-headless=11.0* \
+        picosat=965* \
         pkg-config=0.29.1* \
         valgrind=1:3.15.0*
 
@@ -471,6 +474,62 @@ RUN for OS in linux android; do \
     rm /tmp/yaml-cpp-*.tar.gz
 
 RUN apt-get update -y && apt-get -y install git libgmp3-dev=2:6.2.*
+
+# Jerasure
+ARG JERASURE_VERSION=2.0-1
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/jerasure-${JERASURE_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-jerasure/releases/download/${JERASURE_VERSION}/jerasure-${JERASURE_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/jerasure-${JERASURE_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
+    rm /tmp/jerasure-*.tar.gz
+
+# Liberasure
+ARG LIBERASURECODE_VERSION=1.6.2-1
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/liberasurecode-${LIBERASURECODE_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-liberasurecode/releases/download/${LIBERASURECODE_VERSION}/liberasurecode-${LIBERASURECODE_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/liberasurecode-${LIBERASURECODE_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
+    rm /tmp/liberasurecode-*.tar.gz
+
+# Json-C
+ARG JSON_C_VERSION=0.15-20200726-1
+RUN for OS in android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/json-c-${JSON_C_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-json-c/releases/download/${JSON_C_VERSION}/json-c-${JSON_C_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/json-c-${JSON_C_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
+    rm /tmp/json-c-*.tar.gz
+
+# gf-complete 
+ARG GF_COMPLETE_VERSION=1.0.3-1
+RUN for OS in linux android; do \
+        for ARCH in x86_64 arm64-v8a; do \
+            wget \
+                --output-document=/tmp/gf-complete-${GF_COMPLETE_VERSION}-${OS}-${ARCH}.tar.gz \
+                https://github.com/tst-race/ext-gf-complete/releases/download/${GF_COMPLETE_VERSION}/gf-complete-${GF_COMPLETE_VERSION}-${OS}-${ARCH}.tar.gz && \
+            tar --extract \
+                --file=/tmp/gf-complete-${GF_COMPLETE_VERSION}-${OS}-${ARCH}.tar.gz \
+                --directory=/${OS}/${ARCH}; \
+        done; \
+    done && \
+    rm /tmp/gf-complete-*.tar.gz
 
 # Ensure these environment variables exist, even if they are empty
 ENV RACE_NODE_TYPE= \

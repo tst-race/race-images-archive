@@ -137,7 +137,9 @@ RUN apt-get -y update && \
         libcurl4-gnutls-dev=7.68.0* \
         libicu-dev=66.1* \
         libjpeg-dev=8c* \
-        libjson-c-dev=0.13.1* \
+        libjson-c-dev \
+	libevent-dev \
+        libsqlite3-dev \
         libltdl-dev=2.4.6* \
         libpcre3=2:8.39* \
         libpcre3-dev=2:8.39* \
@@ -853,6 +855,47 @@ RUN case ${TARGETPLATFORM} in \
         --directory=/usr/local && \
     rm /tmp/yaml-cpp-*.tar.gz
 
+# Jerasure
+ARG JERASURE_VERSION=2.0-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/jerasure-${JERASURE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-jerasure/releases/download/${JERASURE_VERSION}/jerasure-${JERASURE_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/jerasure-${JERASURE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/jerasure-*.tar.gz
+
+# Liberasurecode
+ARG LIBERASURECODE_VERSION=1.6.2-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/liberasurecode-${LIBERASURECODE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-liberasurecode/releases/download/${LIBERASURECODE_VERSION}/liberasurecode-${LIBERASURECODE_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/liberasurecode-${LIBERASURECODE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/liberasurecode-*.tar.gz
+
+# gf-complete
+ARG GF_COMPLETE_VERSION=1.0.3-1
+RUN case ${TARGETPLATFORM} in \
+        "linux/amd64") LINUX_ARCH=x86_64    ;; \
+        "linux/arm64") LINUX_ARCH=arm64-v8a ;; \
+    esac && \
+    wget \
+        --output-document=/tmp/gf-complete-${GF_COMPLETE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        https://github.com/tst-race/ext-gf-complete/releases/download/${GF_COMPLETE_VERSION}/gf-complete-${GF_COMPLETE_VERSION}-linux-${LINUX_ARCH}.tar.gz && \
+    tar --extract \
+        --file=/tmp/gf-complete-${GF_COMPLETE_VERSION}-linux-${LINUX_ARCH}.tar.gz \
+        --directory=/usr/local && \
+    rm /tmp/gf-complete-*.tar.gz
 
 ###
 # Install Linux Packages
