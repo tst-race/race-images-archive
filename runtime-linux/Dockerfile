@@ -376,16 +376,6 @@ RUN python3.7 -m pip install --no-cache-dir \
         pillow~=9.5.0 \
         reedsolo~=1.5.4
 
-# Install Butkus Python dependencies
-RUN python3.7 -m pip install --no-cache-dir \
-    transformers~=4.30.2 \
-    torch~=1.13.1 \
-    fixedint~=0.2.0
-
-#local python3.8 versions that don't work with 3.7
-#transformers~=4.36.2
-#torch~=2.1.2
-
 RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager~=0.9.0 && \
     webdrivermanager firefox --linkpath /usr/local/bin
@@ -440,8 +430,10 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 # amd64-specific binaries
 FROM base as amd64-installs
 RUN python3.7 -m pip install --no-cache-dir \
+    fixedint~=0.2.0 \
     torch~=1.7.0 \
-    torchvision~=0.8.1 
+    torchvision~=0.8.1 \
+    transformers~=4.30.2
 
 RUN wget http://ftp.mozilla.org/pub/firefox/releases/103.0/linux-$(uname -m)/en-US/firefox-103.0.tar.bz2 && \
     tar -xjf firefox-103.0.tar.bz2 && \
@@ -467,8 +459,10 @@ FROM base as arm64-installs
 # TODO these versions of torch* may not work for SRI
 # consider build the older versions from source
 RUN python3.7 -m pip install --no-cache-dir \
-        torch~=1.8.0 \
-        torchvision~=0.9.0
+    fixedint~=0.2.0 \
+    torch~=1.8.0 \
+    torchvision~=0.9.0 \
+    transformers~=4.30.2
 
 RUN python3.7 -m pip install --no-cache-dir tensorflow-aarch64==2.7.4
 RUN apt-get -y install chromium-browser
