@@ -376,6 +376,16 @@ RUN python3.7 -m pip install --no-cache-dir \
         pillow~=9.5.0 \
         reedsolo~=1.5.4
 
+# Install Butkus Python dependencies
+RUN python3.7 -m pip install --no-cache-dir \
+    transformers~=4.30.2 \
+    torch~=1.13.1 \
+    fixedint~=0.2.0
+
+#local python3.8 versions that don't work with 3.7
+#transformers~=4.36.2
+#torch~=2.1.2
+
 RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager~=0.9.0 && \
     webdrivermanager firefox --linkpath /usr/local/bin
