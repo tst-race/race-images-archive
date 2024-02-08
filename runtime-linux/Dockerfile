@@ -48,7 +48,8 @@ RUN mkdir -p ${APP_ROOT} ${TMP_ROOT} ${CONFIG_ROOT} \
 RUN apt-get -y update && \
     apt install software-properties-common -y && \
     apt-key adv --fetch-keys https://apt.llvm.org/llvm-snapshot.gpg.key && \
-    add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main'
+    add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main' \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install utilities first
 # Note: to get a list of current packages and versions run this command from within the image:
@@ -88,11 +89,13 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
         vim=2:8* \
         wget=1.20.3* \
         zip=3.0* && \
-    update-ca-certificates -f;
+    update-ca-certificates -f \
+    && rm -rf /var/lib/apt/lists/*
 
 # Add CMake repository for cmake 3.23
 RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add - && \
-    add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+    add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install build tools/libraries
 RUN apt-get -y update && \
@@ -138,7 +141,8 @@ RUN apt-get -y update && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 1 && \
     update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 1 && \
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 1 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 1
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 1 \
+    && rm -rf /var/lib/apt/lists/*
 
 ###
 # Configure Language/Env
@@ -209,7 +213,8 @@ RUN PYTHON_VERSION="3.7.17" && \
     rm get-pip.py && \
     apt-get -y purge python3.8 && \
     apt-get -y autoremove && \
-    apt-get -y update && apt-get install -y --no-install-recommends clang-format-10=1:10.*
+    apt-get -y update && apt-get install -y --no-install-recommends clang-format-10=1:10.* \
+    && rm -rf /var/lib/apt/lists/*
 
 # TODO: if we ever want to update to Python 3.8, that is the default for ubuntu:20.04
 # RUN apt-get -y update && apt-get install -y --no-install-recommends \
@@ -309,7 +314,8 @@ RUN python3.7 -m pip install --no-cache-dir \
 RUN apt-get -y update && \
     apt-get install -y \
         redis-server \
-        libgmp3-dev=2:6.2.*
+        libgmp3-dev=2:6.2.* \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install SRI TA1 Python Dependencies
 RUN python3.7 -m pip install --no-cache-dir \
@@ -341,7 +347,8 @@ RUN python3.7 -m pip install --no-cache-dir \
 RUN apt-get -y update && \
     apt-get install -y \
         libcurl4-openssl-dev \
-        libsodium-dev
+        libsodium-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install SRI TA2 System Dependencies
 WORKDIR ${TMP_ROOT}
@@ -363,7 +370,8 @@ RUN apt-get -y update && \
         php7.4-gd=7.4.3* \
         software-properties-common=0.99.* \
         x11-apps=7.7* \
-        xvfb=2:1.20.13-1*
+        xvfb=2:1.20.13-1* \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR ${TMP_ROOT}
 
@@ -376,16 +384,6 @@ RUN python3.7 -m pip install --no-cache-dir \
         pillow~=9.5.0 \
         reedsolo~=1.5.4
 
-# Install Butkus Python dependencies
-RUN python3.7 -m pip install --no-cache-dir \
-    transformers~=4.30.2 \
-    torch~=1.13.1 \
-    fixedint~=0.2.0
-
-#local python3.8 versions that don't work with 3.7
-#transformers~=4.36.2
-#torch~=2.1.2
-
 RUN python3.7 -m pip install --no-cache-dir \
     webdrivermanager~=0.9.0 && \
     webdrivermanager firefox --linkpath /usr/local/bin
@@ -396,7 +394,8 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
 RUN apt-get -y update && \
     apt-get install -y --no-install-recommends \
         apt-utils=2.0.* \
-        libcudnn8=8.3.1.22*
+        libcudnn8=8.3.1.22* \
+    && rm -rf /var/lib/apt/lists/*
 RUN apt-get -y update && TZ=America/New_York apt-get install -y tzdata
 
 RUN curl -o /opt/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/89.0.4389.23/chromedriver_linux64.zip \
@@ -434,14 +433,17 @@ RUN python3.7 -m pip install --no-cache-dir \
 
 # Install Georgetown Linux Dependencies
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
-    gnupg=2.2.* 
+    gnupg=2.2.* \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # amd64-specific binaries
 FROM base as amd64-installs
 RUN python3.7 -m pip install --no-cache-dir \
+    fixedint~=0.2.0 \
     torch~=1.7.0 \
-    torchvision~=0.8.1 
+    torchvision~=0.8.1 \
+    transformers~=4.30.2
 
 RUN wget http://ftp.mozilla.org/pub/firefox/releases/103.0/linux-$(uname -m)/en-US/firefox-103.0.tar.bz2 && \
     tar -xjf firefox-103.0.tar.bz2 && \
@@ -456,8 +458,9 @@ RUN \
     wget \
         --output-document=/tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
         http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb && \
-    apt-get install -yy /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb && \
-    rm /tmp/google-chrome-stable_*.deb
+    apt-get update -y && apt-get install -yy /tmp/google-chrome-stable_${CHROME_VERSION}_amd64.deb && \
+    rm /tmp/google-chrome-stable_*.deb \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN ldconfig /usr/local/cuda-11.7/targets/x86_64-linux/lib/stubs && ldconfig 
 RUN python3.7 -m pip install --no-cache-dir numba==0.51.2
@@ -467,11 +470,14 @@ FROM base as arm64-installs
 # TODO these versions of torch* may not work for SRI
 # consider build the older versions from source
 RUN python3.7 -m pip install --no-cache-dir \
-        torch~=1.8.0 \
-        torchvision~=0.9.0
+    fixedint~=0.2.0 \
+    torch~=1.8.0 \
+    torchvision~=0.9.0 \
+    transformers~=4.30.2
 
 RUN python3.7 -m pip install --no-cache-dir tensorflow-aarch64==2.7.4
-RUN apt-get -y install chromium-browser
+RUN apt-get -y install chromium-browser \
+    && rm -rf /var/lib/apt/lists/*
 RUN ldconfig /usr/local/cuda-11.7/targets/sbsa-linux/lib/stubs && ldconfig
 
 RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-aarch64.sh && \
@@ -722,23 +728,27 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
     tightvncserver=1.3.10-* \
     xfonts-base=1:1.0.* \
     locales=2.31-* && \
-    apt-get clean
+    apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # TODO: not entirely sure these are needed. Adding for now since libvirt-bin is no longer avaiable when upgrading from 18.04 to 20.04. Try to remove it later and see if it's all good.
 RUN apt-get -y update && apt-get install -y --no-install-recommends \
-    libvirt-daemon-system libvirt-clients
+    libvirt-daemon-system libvirt-clients \
+    && rm -rf /var/lib/apt/lists/*
 
 ###
 # Configure supervisor
 ###
 
-RUN apt-get update -y && apt-get install -y supervisor=4.1.0-*
+RUN apt-get update -y && apt-get install -y supervisor=4.1.0-* \
+    && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 COPY race_wrapper.sh \
    print_env_vars.sh \
    uninstall-race.sh \
    /code/
-RUN apt install cron
+RUN apt-get update && apt-get install cron -yy \
+    && rm -rf /var/lib/apt/lists/*
 RUN mkdir /race-service-logs
 RUN mkdir /logs
 
