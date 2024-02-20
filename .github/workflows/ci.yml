@@ -36,4 +36,11 @@ jobs:
     with:
       context: runtime-linux
       image-name: ${{ github.repository }}/race-runtime-linux
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
+
+  runtime-linux-image-arm64:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      context: runtime-linux
+      image-name: ${{ github.repository }}/race-runtime-linux
+      platforms: linux/arm64
