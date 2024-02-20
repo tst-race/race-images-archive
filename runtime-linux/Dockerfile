@@ -478,7 +478,7 @@ RUN python3.7 -m pip install --no-cache-dir \
     transformers~=4.30.2
 
 RUN python3.7 -m pip install --no-cache-dir tensorflow-aarch64==2.7.4
-RUN apt-get -y install chromium-browser \
+RUN apt-get -y update && apt-get -y install chromium-browser \
     && rm -rf /var/lib/apt/lists/*
 RUN ldconfig /usr/local/cuda-11.7/targets/sbsa-linux/lib/stubs && ldconfig
 
