@@ -1,0 +1,19 @@
+# This file is copied from here: https://gitlab.race.twosixlabs.com/race-common/nginx/-/blob/2a1ff724507430c234e8319d6a558868dafaf150/nginx.service
+
+[Unit]
+Description=A high performance web server and a reverse proxy server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/local/nginx/sbin/nginx -t -q -g 'daemon on; master_process on;'
+ExecStart=/usr/local/nginx/sbin/nginx -g 'daemon on; master_process on;'
+ExecReload=/usr/local/nginx/sbin/nginx -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+

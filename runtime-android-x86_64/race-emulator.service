@@ -1,0 +1,18 @@
+[Unit]
+Description=Android Emulator for RACE
+Wants=
+After=network.target sshd.service race-env.service vncserver.service
+StartLimitIntervalSec=0
+[Service]
+EnvironmentFile=/code/race.env
+Environment="DISPLAY=:1"
+User=root
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/bin/bash -c "sleep 5 && emulator @android_29 -no-audio -ranchu -no-boot-anim -gpu swiftshader_indirect"
+StandardOutput=/log/emulator-stdout.log
+StandardError=/log/emulator-stderr.log
+
+[Install]
+WantedBy=multi-user.target

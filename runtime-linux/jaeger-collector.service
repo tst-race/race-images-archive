@@ -1,0 +1,15 @@
+[Unit]
+Description=Jaeger Collector Service
+EnvironmentFile=/code/race.env
+After=network.target race-env.service
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/code/race_wrapper.sh jaeger-collector
+StandardOutput=file:/race-service-logs/jaeger-collector.log
+StandardError=file:/race-service-logs/jaeger-collector.log
+
+[Install]
+WantedBy=multi-user.target

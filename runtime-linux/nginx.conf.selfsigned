@@ -1,0 +1,94 @@
+# This file is copied from here: https://gitlab.race.twosixlabs.com/race-common/nginx/-/blob/2a1ff724507430c234e8319d6a558868dafaf150/nginx.conf.selfsigned
+
+pid /run/nginx.pid;
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    sendfile        on;    
+    keepalive_timeout  65;
+
+    server {
+        listen 80;
+        server_name localhost;
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        listen       443 ssl;
+        server_name  localhost;
+
+
+        ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+        ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+	
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        ssl_prefer_server_ciphers on;
+        ssl_dhparam /etc/ssl/certs/dhparam.pem;
+        #ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+        ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
+        ssl_session_timeout 1d;
+        ssl_session_cache shared:SSL:50m;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+        add_header Strict-Transport-Security max-age=15768000;
+
+        client_max_body_size 128M;
+
+        add_header Access-Control-Allow-Origin * always;
+        add_header Cache-Control no-cache always;
+
+        # Return an empty response, used by dash.js to sync with server time
+        location /time {
+            return 200;
+        }
+
+        # DASH files
+        location /dash {
+           root /ramfs/destini/steg;
+        }
+
+        # HLS files
+        # location /hls {
+        #     root /tmp;
+        # }
+   }
+}
+
+rtmp {
+    server {
+        listen 1935 so_keepalive=on;
+        chunk_size 4096;
+	timeout 1800s;
+	
+        publish_time_fix off;
+
+        application dash {
+            live on;
+            record off;
+#            allow publish XXX.XXX.XXX.XXX;  
+            allow publish all;
+
+            dash on;
+            dash_nested on;
+            dash_path /ramfs/destini/steg/dash;
+            dash_fragment 3;
+            #dash_playlist_length 120;
+	    dash_playlist_length 10m;
+            # dash_cleanup on;
+            dash_cleanup off;
+
+            dash_clock_compensation http_head;
+            dash_clock_helper_uri https://localhost/time;
+
+            dash_variant _low   bandwidth="500000"  width="640"  height="360";
+            dash_variant _med  bandwidth="1500000" width="1280"  height="720";
+            dash_variant _high bandwidth="5000000" width="1920" height="1080" max;
+
+        }
+    }
+}

@@ -1,0 +1,14 @@
+[Unit]
+Description=Uninstall RACE
+EnvironmentFile=/code/race.env
+After=race-env.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+ExecStart=/code/race_wrapper.sh /code/uninstall-race.sh
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
